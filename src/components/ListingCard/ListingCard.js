@@ -17,7 +17,7 @@ import {
   ListingCardThumbnail,
 } from '../../components';
 
-import { getListingCardTranslations } from './ListingCard.helpers';
+import { getListingCardTranslations, getTripCardDetails } from './ListingCard.helpers';
 
 import css from './ListingCard.module.css';
 
@@ -122,6 +122,9 @@ export const ListingCard = props => {
     authorName,
   } = translations;
 
+  // beaway: badge, date + departure point, seats left
+  const { badge, tripDetails, seatsLeft } = getTripCardDetails(listing, intl);
+
   const classes = classNames(rootClassName || css.root, className);
 
   const id = listing?.id?.uuid;
@@ -177,21 +180,24 @@ export const ListingCard = props => {
           setActivePropsMaybe={setActivePropsMaybe}
         />
       )}
+      {/* beaway: card layout follows the "Upcoming trips" mockup.
+          ⚠️ Heights here are mirrored in SectionListings.js calculateCarouselHeight (cardInfoHeight). */}
       <div className={css.info}>
-        {showPrice ? (
-          <div className={css.price} title={priceTooltip}>
-            {priceMessage}
+        <div className={css.badgeRow}>
+          {badge ? (
+            <span className={classNames(css.badge, css[badge.variant])}>{badge.label}</span>
+          ) : null}
+        </div>
+        {/* Without a photo, the placeholder above already shows the title */}
+        <div className={css.title}>{showListingImage ? titleFormatted : null}</div>
+        <div className={css.tripDetails}>{tripDetails}</div>
+        <div className={css.bottomRow}>
+          <div className={css.price} title={showPrice ? priceTooltip : undefined}>
+            {showPrice ? priceMessage : null}
           </div>
-        ) : null}
-        <div className={css.mainInfo}>
-          {showListingImage && (
-            <div className={classNames(css.title, { [css.lightText]: darkMode })}>
-              {titleFormatted}
-            </div>
-          )}
-          {showAuthorInfo ? (
-            <div className={classNames(css.authorInfo, { [css.lightText]: darkMode })}>
-              {authorName}
+          {seatsLeft ? (
+            <div className={classNames(css.seatsLeft, { [css.seatsFull]: seatsLeft.isFull })}>
+              {seatsLeft.text}
             </div>
           ) : null}
         </div>

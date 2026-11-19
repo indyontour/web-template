@@ -296,6 +296,10 @@ const getSearchParams = config => {
       'publicData.shippingEnabled',
       'publicData.priceVariationsEnabled',
       'publicData.priceVariants',
+      'publicData.priceperseat',
+      'publicData.tripdateandtime',
+      'publicData.departurepoint',
+      'publicData.seatsavailable',
     ],
     'fields.user': ['profile.displayName', 'profile.abbreviatedName'],
     'fields.image': [

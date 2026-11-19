@@ -26,6 +26,76 @@ const priceData = (price, currency, intl) => {
   return {};
 };
 
+// beaway: turn the "Price per seat (THB)" value into a number.
+// Accepts a number (2500) or digits-only text ("2500", "2,500"); anything else is ignored.
+const parseSeatPrice = value => {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) && value > 0 ? value : null;
+  }
+  if (typeof value === 'string') {
+    const digits = value.trim().replace(/,/g, '');
+    return /^\d+$/.test(digits) && Number(digits) > 0 ? Number(digits) : null;
+  }
+  return null;
+};
+
+// beaway: label shown at the top of each trip card, by listing type.
+const TRIP_BADGES = {
+  'local-host-trip': { id: 'ListingCard.badge.localHost', variant: 'localHost' },
+  'licensed-operator-trip': { id: 'ListingCard.badge.licensedOperator', variant: 'licensedOperator' },
+};
+
+const cleanText = value => (typeof value === 'string' ? value.trim() : '');
+
+const parseSeats = value => {
+  if (typeof value === 'number' && Number.isInteger(value) && value >= 0) {
+    return value;
+  }
+  if (typeof value === 'string' && /^\d+$/.test(value.trim())) {
+    return Number(value.trim());
+  }
+  return null;
+};
+
+/**
+ * beaway: trip details for the card, read from the Console listing fields
+ * tripdateandtime, departurepoint and seatsavailable.
+ *
+ * @param {Object} listing - API entity: listing or ownListing
+ * @param {Object} intl - React Intl instance
+ * @returns {Object}
+ *   - badge: { label, variant } or null ("Local host" / "Licensed operator")
+ *   - tripDetails: e.g. "30 Nov at 7:00 AM · Departs Maya Mall", or ''
+ *   - seatsLeft: { text, isFull } or null, e.g. "3 seats left" / "Full"
+ */
+export const getTripCardDetails = (listing, intl) => {
+  const { publicData } = listing?.attributes || {};
+  const { listingType, tripdateandtime, departurepoint, seatsavailable } = publicData || {};
+
+  const badgeConfig = TRIP_BADGES[listingType];
+  const badge = badgeConfig
+    ? { label: intl.formatMessage({ id: badgeConfig.id }), variant: badgeConfig.variant }
+    : null;
+
+  const date = cleanText(tripdateandtime);
+  const point = cleanText(departurepoint);
+  const departs = point ? intl.formatMessage({ id: 'ListingCard.departs' }, { point }) : '';
+  const tripDetails = [date, departs].filter(Boolean).join(' · ');
+
+  const seats = parseSeats(seatsavailable);
+  const seatsLeft =
+    seats == null
+      ? null
+      : seats === 0
+      ? { text: intl.formatMessage({ id: 'ListingCard.seatsFull' }), isFull: true }
+      : {
+          text: intl.formatMessage({ id: 'ListingCard.seatsLeft' }, { count: seats }),
+          isFull: false,
+        };
+
+  return { badge, tripDetails, seatsLeft };
+};
+
 /**
  * Returns all translated and formatted strings for ListingCard so the
  * presentational component can stay simple and aria-labels use the same copy.
@@ -78,13 +148,32 @@ export const getListingCardTranslations = (listing, config, intl) => {
       ? intl.formatMessage({ id: priceMessageId }, { priceValue, pricePerUnit })
       : '';
 
-  const priceMessagePlain =
+  const builtInPriceMessagePlain =
     showPrice && formattedPrice != null
       ? intl.formatMessage(
           { id: priceMessageId },
           { priceValue: formattedPrice, pricePerUnit: perUnitString }
         )
       : '';
+
+  // beaway: trips have no built-in price; the price lives in the custom
+  // "Price per seat (THB)" listing field (publicData.priceperseat).
+  // Show it as e.g. "฿2,500 / seat" when there's no built-in price to show.
+  const seatPrice = builtInPriceMessagePlain ? null : parseSeatPrice(publicData?.priceperseat);
+  const seatPriceFormatted = seatPrice != null ? intl.formatNumber(seatPrice) : null;
+  const seatPriceMessage =
+    seatPriceFormatted != null
+      ? intl.formatMessage(
+          { id: 'ListingCard.pricePerSeat' },
+          { priceValue: <span className={css.priceValue}>{seatPriceFormatted}</span> }
+        )
+      : null;
+  const seatPriceMessagePlain =
+    seatPriceFormatted != null
+      ? intl.formatMessage({ id: 'ListingCard.pricePerSeat' }, { priceValue: seatPriceFormatted })
+      : null;
+
+  const priceMessagePlain = seatPriceMessagePlain || builtInPriceMessagePlain;
 
   const cardAriaLabel =
     priceMessagePlain.length > 0
@@ -101,9 +190,9 @@ export const getListingCardTranslations = (listing, config, intl) => {
       longWordClass: css.longWord,
     }),
     authorName,
-    showPrice,
-    priceTooltip,
-    priceMessage,
+    showPrice: seatPriceMessage ? true : showPrice,
+    priceTooltip: seatPriceMessagePlain || priceTooltip,
+    priceMessage: seatPriceMessage || priceMessage,
     cardAriaLabel,
   };
 };

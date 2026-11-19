@@ -103,15 +103,15 @@
   display: contents;
 }
 
+/* beaway: trip cards have a white background and border, so the last card can't use
+   padding for the space after it (that made it look wider with a blank strip).
+   The last card keeps the normal card width; a bigger margin-right gives the end space
+   (same total as before: 32px former padding + the usual gap). */
 .listItem:last-of-type > * {
-  padding-right: 32px;
-  width: calc(min(var(--contentMaxWidthPages), var(--carouselWidth)) - 32px);
-}
+  margin-right: 48px;
 
-@media (min-width: 1200px) {
-  .listItem:last-of-type > * {
-    padding-right: 32px;
-    width: calc(min(var(--contentMaxWidthPages), var(--carouselWidth)) - 32px);
+  @media (--viewportMedium) {
+    margin-right: 64px;
   }
 }
 
@@ -152,11 +152,6 @@
   }
 }
 
-.threeColumns .listItem:last-of-type > *:not(.isInsideContainer) {
-  @media (--viewportMedium) {
-    width: calc((min(var(--contentMaxWidthPages), var(--carouselWidth)) - 32px) / 3);
-  }
-}
 
 .fourColumns .card:not(.isInsideContainer) {
   @media (--viewportMedium) {
@@ -165,11 +160,6 @@
   }
 }
 
-.fourColumns .listItem:last-of-type > *:not(.isInsideContainer) {
-  @media (--viewportMedium) {
-    width: calc((min(var(--contentMaxWidthPages), var(--carouselWidth)) - 32px) / 4);
-  }
-}
 
 .carouselImageHoverEffect {
   transition: var(--transitionStyleButton);

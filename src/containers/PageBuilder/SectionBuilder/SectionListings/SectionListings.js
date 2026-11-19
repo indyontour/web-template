@@ -94,20 +94,15 @@ const calculateCarouselHeight = (
 
   const thumbnailAspectRatio = config.layout.listingImage.aspectRatio;
   const paddingHorizontal = 2 * 32; // 2x32px
-  const titleHeightSingleLine = 16;
-  const titleHeightDoubleLine = titleHeightSingleLine * 2;
-  const cardInfoPadding = 14 + 2; // padding-top + padding-bottom
-  const priceHeight = 16 + 4; // height + margin-bottom
-  const authorInfoHeight = 24;
   const contentMaxWidthPages = 1120;
   const containerPaddingTop = 32;
   const containerPaddingBottom = 24;
 
-  const priceHeightMobile = 18 + 4; // 18 + margin bottom
-  const authorInfoHeightMobile = 18 + 4 + 4; // 18 + padding top + padding bottom
-  const titleHeightSingleLineMobile = 18;
-  const cardInfoHeightMobile =
-    priceHeightMobile + authorInfoHeightMobile + titleHeightSingleLineMobile + cardInfoPadding;
+  // beaway: the trip card's info block has fixed heights (see ListingCard.module.css):
+  // padding 16+16, badge 30, title 48, trip details 46, price row 52, border 2 = 210px.
+  // It's the same on mobile and desktop.
+  const cardInfoHeight = 16 + 30 + 48 + 46 + 52 + 16 + 2;
+  const cardInfoHeightMobile = cardInfoHeight;
 
   const parsedAspectRatio = parseAspectRatio(thumbnailAspectRatio);
 
@@ -117,7 +112,6 @@ const calculateCarouselHeight = (
   const cardWidth =
     (mainColumnWidth - paddingHorizontal - gutters) / (isMobileBreakpoint ? 1 : numColumns);
   const cardImageHeight = cardWidth / parsedAspectRatio;
-  const cardInfoHeight = priceHeight + titleHeightSingleLine + authorInfoHeight + cardInfoPadding;
 
   const totalCardHeight =
     cardImageHeight + (isMobileBreakpoint ? cardInfoHeightMobile : cardInfoHeight);

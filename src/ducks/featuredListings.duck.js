@@ -67,6 +67,12 @@ const fetchFeaturedListingsPayloadCreator = async (arg, thunkAPI) => {
           'publicData.shippingEnabled',
           'publicData.priceVariationsEnabled',
           'publicData.priceVariants',
+          // beaway: "Price per seat (THB)" shown on trip cards
+          'publicData.priceperseat',
+          // beaway: trip details shown on trip cards
+          'publicData.tripdateandtime',
+          'publicData.departurepoint',
+          'publicData.seatsavailable',
         ],
         'fields.image': [
           'variants.listing-card',

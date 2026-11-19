@@ -1,123 +1,157 @@
 @import '../../styles/customMediaQueries.css';
 
+/*
+ * beaway trip card, matching the "Upcoming trips" mockup:
+ * photo on top, then badge, title, date + departure point, and price / seats left at the bottom.
+ *
+ * ⚠️ The info block has fixed heights so all cards line up. Its total height (210px incl. border)
+ * is hardcoded in SectionListings.js calculateCarouselHeight() as cardInfoHeight.
+ * If you change heights here, update that number too.
+ */
+
 .root {
   /* Layout */
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+
+  background-color: var(--colorWhite);
+  border: 1px solid #e8e4dc;
+  border-radius: 12px;
+  transition: var(--transitionStyleButton);
 
   /* Remove link's hover effect */
   &:hover {
     text-decoration: none;
   }
-}
 
-.aspectRatioWrapper {
-  transition: var(--transitionStyleButton);
-  background: var(--colorGrey100); /* Loading BG color */
-  border-radius: var(--borderRadiusMedium);
-
+  /* Hover: shadow only. Don't use transform here: the home page carousel
+     (SectionListings) positions cards with transform, and overriding it on
+     hover makes cards jump sideways back and forth. */
   @media (--viewportMedium) {
     &:hover {
-      transform: scale(1.02);
       box-shadow: var(--boxShadowListingCard);
+      border-color: #d6d0c4;
     }
   }
 }
 
+.aspectRatioWrapper {
+  background: var(--colorGrey100); /* Loading BG color */
+}
+
 .rootForImage {
-  border: solid 1px var(--colorGrey100);
-  border-radius: var(--borderRadiusMedium);
   width: 100%;
   height: 100%;
+  object-fit: cover;
 }
 
-.title.lightText {
-  color: var(--colorWhite);
-}
-
-.authorInfo.lightText {
-  color: var(--colorWhite);
-}
-
+/* 16 + 30 + 48 + 46 + 52 + 16 = 208px */
 .info {
-  /* Layout */
   display: flex;
   flex-direction: column;
-  /* ⚠️ padding width is hardcoded in SectionListings.js calculateCarouselHeight() as cardInfoPadding*/
-  padding: 14px 0 2px 0;
+  padding: 16px 18px;
 }
 
-/* ⚠️ the total calculated height of this selector is hardcoded in SectionListings.js calculateCarouselHeight() as priceHeight*/
+/* 22px + 8px margin = 30px */
+.badgeRow {
+  display: flex;
+  align-items: center;
+  height: 22px;
+  margin-bottom: 8px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0 10px;
+  border-radius: 999px;
+
+  font-size: 13px;
+  line-height: 22px;
+  font-weight: var(--fontWeightSemiBold);
+  white-space: nowrap;
+}
+
+.localHost {
+  background-color: #e4efe7;
+  color: #1f4d3a;
+}
+
+.licensedOperator {
+  background-color: #fbe1d3;
+  color: #8a3412;
+}
+
+/* 2 lines x 24px = 48px */
+.title {
+  height: 48px;
+  margin: 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: var(--fontWeightBold);
+  color: #1d2a24;
+}
+
+/* 6px margin + 2 lines x 20px = 46px */
+.tripDetails {
+  height: 40px;
+  margin-top: 6px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: var(--fontWeightRegular);
+  color: #4a5550;
+}
+
+/* 8px margin + 44px = 52px.
+   Price and seats left sit side by side; on narrow cards "seats left" wraps under the price.
+   Room for 2 lines is always reserved so every card has the same height. */
+.bottomRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-end;
+  align-items: baseline;
+  justify-content: space-between;
+  column-gap: 8px;
+  height: 44px;
+  margin-top: 8px;
+}
+
 .price {
-  composes: textSmall from global;
-  /* Layout */
-  flex-shrink: 0;
-  margin-bottom: 4px;
-  color: var(--colorGrey700);
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: var(--fontWeightBold);
+  color: #1d2a24;
+  white-space: nowrap;
 }
 
 .priceValue {
-  /* Font */
-  font-weight: var(--fontWeightSemiBold);
-  color: var(--marketplaceColor);
-
-  /* Remove default margins from font */
-  margin-top: 0;
-  margin-bottom: 0;
-
-  @media (--viewportMedium) {
-    margin-top: 0;
-    margin-bottom: 0;
-  }
+  font-weight: var(--fontWeightBold);
 }
 
 .perUnit {
-  /* Font */
-  font-weight: var(--fontWeightSemiBold);
-  color: var(--marketplaceColor);
-
-  /* Remove default margins from font */
-  margin-top: 0;
-  margin-bottom: 0;
-
-  @media (--viewportMedium) {
-    margin-top: 0;
-    margin-bottom: 0;
-  }
-}
-
-.mainInfo {
-  display: flex;
-  flex-direction: column;
-}
-
-/* ⚠️ the calculated height of this selector is hardcoded in SectionListings.js calculateCarouselHeight() as titleHeightSingleLine */
-.title {
-  /* Font */
-  composes: textSmall from global;
   font-weight: var(--fontWeightBold);
-  color: var(--colorGrey700);
-  margin: 0;
 }
 
-/* ⚠️ the calculated height of this selector is hardcoded in SectionListings.js calculateCarouselHeight() as authorInfoHeight & authorInfoHeighMobile */
-.authorInfo {
-  /* Font */
-  composes: marketplaceTinyFontStyles from global;
-  font-weight: var(--fontWeightMedium);
-  color: var(--colorGrey700);
+.seatsLeft {
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: var(--fontWeightBold);
+  color: #b9471b;
+  white-space: nowrap;
+}
 
-  padding-top: 4px;
-  padding-bottom: 4px;
-
-  /* Remove default margins from font */
-  margin-top: 0;
-  margin-bottom: 0;
-
-  @media (--viewportMedium) {
-    margin-top: 0;
-    margin-bottom: 0;
-  }
+.seatsFull {
+  color: #7a7f7c;
 }
 
 .longWord {

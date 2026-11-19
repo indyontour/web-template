@@ -449,6 +449,12 @@ export const loadData = (params, search, config) => (dispatch, getState, sdk) =>
         'publicData.shippingEnabled',
         'publicData.priceVariationsEnabled',
         'publicData.priceVariants',
+        // beaway: "Price per seat (THB)" shown on trip cards
+        'publicData.priceperseat',
+        // beaway: trip details shown on trip cards
+        'publicData.tripdateandtime',
+        'publicData.departurepoint',
+        'publicData.seatsavailable',
       ],
       'fields.user': ['profile.displayName', 'profile.abbreviatedName'],
       'fields.image': [
