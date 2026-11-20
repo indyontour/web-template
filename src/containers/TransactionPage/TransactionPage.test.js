@@ -514,18 +514,18 @@ describe('TransactionPage', () => {
       //expect(screen.queryAllByText('Jun 14')).toHaveLength(expectedLength);
 
       expect(screen.queryAllByText('OrderBreakdown.baseUnitDay')).toHaveLength(expectedLength);
-      expect(screen.queryAllByText('OrderBreakdown.subTotal')).toHaveLength(expectedLength);
-      // beaway: base, subtotal and the host's total (payin) are all $10.00
-      expect(screen.queryAllByText('$10.00')).toHaveLength(expectedLength * 3);
+      // beaway: no fee lines, so no subtotal; base price and the host's total (payin) are $10.00
+      expect(screen.queryAllByText('OrderBreakdown.subTotal')).toHaveLength(0);
+      expect(screen.queryAllByText('$10.00')).toHaveLength(expectedLength * 2);
 
       // Order breakdown: refund?
       const expectedLengthReversal = isReversal ? 2 : 0;
       expect(screen.queryAllByText('OrderBreakdown.refund')).toHaveLength(expectedLengthReversal);
       expect(screen.queryAllByText('-$10.00')).toHaveLength(expectedLengthReversal);
 
-      // Order breakdown: commission
-      expect(screen.queryAllByText('OrderBreakdown.commission')).toHaveLength(expectedLength);
-      expect(screen.queryAllByText('-$1.00')).toHaveLength(expectedLength);
+      // Order breakdown: commission (beaway: fee lines are hidden for bookings)
+      expect(screen.queryAllByText('OrderBreakdown.commission')).toHaveLength(0);
+      expect(screen.queryAllByText('-$1.00')).toHaveLength(0);
 
       // Order breakdown: commission refund?
       expect(screen.queryAllByText('OrderBreakdown.refundProviderFee')).toHaveLength(
@@ -539,10 +539,8 @@ describe('TransactionPage', () => {
       expect(screen.queryAllByText(total)).toHaveLength(expectedLength);
       expect(screen.queryAllByText('$9.00')).toHaveLength(0);
 
-      // A note about commission (customer should no see this)
-      expect(screen.queryAllByText('OrderBreakdown.commissionFeeNote')).toHaveLength(
-        expectedLength
-      );
+      // A note about commission (beaway: hidden for bookings)
+      expect(screen.queryAllByText('OrderBreakdown.commissionFeeNote')).toHaveLength(0);
 
       // Activity feed (here we just check the heading)
       expect(screen.getByText('TransactionPanel.activityHeading')).toBeInTheDocument();
@@ -848,17 +846,18 @@ describe('TransactionPage', () => {
       expect(screen.queryAllByText('OrderBreakdown.bookingEnd')).toHaveLength(expectedLength);
 
       expect(screen.queryAllByText('OrderBreakdown.baseUnitHour')).toHaveLength(expectedLength);
-      expect(screen.queryAllByText('OrderBreakdown.subTotal')).toHaveLength(expectedLength);
-      expect(screen.queryAllByText('$30.00')).toHaveLength(expectedLength * 2);
+      // beaway: no fee lines, so no subtotal
+      expect(screen.queryAllByText('OrderBreakdown.subTotal')).toHaveLength(0);
+      expect(screen.queryAllByText('$30.00')).toHaveLength(expectedLength);
 
       // Order breakdown: refund?
       const expectedLengthReversal = isReversal ? 2 : 0;
       expect(screen.queryAllByText('OrderBreakdown.refund')).toHaveLength(expectedLengthReversal);
       expect(screen.queryAllByText('-$30.00')).toHaveLength(expectedLengthReversal);
 
-      // Order breakdown: commission
-      expect(screen.queryAllByText('OrderBreakdown.commission')).toHaveLength(expectedLength);
-      expect(screen.queryAllByText('-$1.00')).toHaveLength(expectedLength);
+      // Order breakdown: commission (beaway: fee lines are hidden for bookings)
+      expect(screen.queryAllByText('OrderBreakdown.commission')).toHaveLength(0);
+      expect(screen.queryAllByText('-$1.00')).toHaveLength(0);
 
       // Order breakdown: commission refund?
       expect(screen.queryAllByText('OrderBreakdown.refundProviderFee')).toHaveLength(
@@ -872,10 +871,8 @@ describe('TransactionPage', () => {
       expect(screen.queryAllByText(total)).toHaveLength(expectedLength);
       expect(screen.queryAllByText('$9.00')).toHaveLength(0);
 
-      // A note about commission (customer should no see this)
-      expect(screen.queryAllByText('OrderBreakdown.commissionFeeNote')).toHaveLength(
-        expectedLength
-      );
+      // A note about commission (beaway: hidden for bookings)
+      expect(screen.queryAllByText('OrderBreakdown.commissionFeeNote')).toHaveLength(0);
 
       // Activity feed (here we just check the heading)
       expect(screen.getByText('TransactionPanel.activityHeading')).toBeInTheDocument();

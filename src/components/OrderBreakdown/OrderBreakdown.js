@@ -7,6 +7,11 @@ import classNames from 'classnames';
 
 import { FormattedMessage, useIntl } from '../../util/reactIntl';
 import {
+  isBookingProcess,
+  isStripeRelatedProcessAlias,
+  resolveLatestProcessName,
+} from '../../transactions/transaction';
+import {
   DATE_TYPE_DATE,
   DATE_TYPE_DATETIME,
   DATE_TYPE_TIME,
@@ -49,8 +54,16 @@ export const OrderBreakdownComponent = props => {
   const isCustomer = userRole === 'customer';
   const isProvider = userRole === 'provider';
   const allLineItems = transaction.attributes.lineItems || [];
+  // beaway: bookings have no online payments and beaway takes no fee, so fee (commission)
+  // line items are never shown for them, even if a commission were set in Console.
+  const processName = resolveLatestProcessName(transaction?.attributes?.processName);
+  const hideFeeLines = isBookingProcess(processName) && !isStripeRelatedProcessAlias(processName);
+  const isFeeLine = lineItem =>
+    [LINE_ITEM_CUSTOMER_COMMISSION, LINE_ITEM_PROVIDER_COMMISSION].includes(lineItem.code);
   // We'll show only line-items that are specific for the current userRole (customer vs provider)
-  const lineItems = allLineItems.filter(lineItem => lineItem.includeFor.includes(userRole));
+  const lineItems = allLineItems.filter(
+    lineItem => lineItem.includeFor.includes(userRole) && !(hideFeeLines && isFeeLine(lineItem))
+  );
   const unitLineItem = lineItems.find(
     item => LISTING_UNIT_TYPES.includes(item.code) && !item.reversal
   );
