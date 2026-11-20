@@ -14,3 +14,6 @@ build
 .env
 npm-debug.log
 yarn-error.log
+
+# beaway: local progress notes for Claude sessions
+PROGRESS-NOTES.md
