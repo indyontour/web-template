@@ -62,6 +62,29 @@ describe('ListingCard', () => {
     expect(getByRole('link')).toHaveTextContent('฿2,500 / seat');
   });
 
+  it('shows the price per seat instead of "(EUR)" when the built-in price is in another currency', () => {
+    const config = getConfig();
+    const { Money } = require('../../util/sdkLoader').types;
+    const listing = createListing(
+      'listing1',
+      {
+        price: new Money(100000, 'EUR'),
+        publicData: { listingType: 'test-trip-booking', priceperseat: 1000 },
+      },
+      { author: createUser('user1') }
+    );
+    const { getByRole, getByText } = render(<ListingCard listing={listing} />, {
+      config,
+      messages: {
+        'ListingCard.pricePerSeat': '฿{priceValue} / seat',
+        'ListingCard.badge.localHost': 'Local host',
+      },
+    });
+    expect(getByRole('link')).toHaveTextContent('฿1,000 / seat');
+    expect(getByRole('link')).not.toHaveTextContent('(EUR)');
+    expect(getByText('Local host')).toBeInTheDocument();
+  });
+
   it('shows the beaway trip badge, date, departure point and seats left', () => {
     const config = getConfig();
     const listing = createListing(

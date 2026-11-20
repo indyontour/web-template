@@ -42,6 +42,8 @@ const parseSeatPrice = value => {
 // beaway: label shown at the top of each trip card, by listing type.
 const TRIP_BADGES = {
   'local-host-trip': { id: 'ListingCard.badge.localHost', variant: 'localHost' },
+  // localhost-only test type (src/config/configBeawayTestListingTypes.js) stands in for Local host
+  'test-trip-booking': { id: 'ListingCard.badge.localHost', variant: 'localHost' },
   'licensed-operator-trip': {
     id: 'ListingCard.badge.licensedOperator',
     variant: 'licensedOperator',
@@ -167,7 +169,11 @@ export const getListingCardTranslations = (listing, config, intl) => {
   // beaway: trips have no built-in price; the price lives in the custom
   // "Price per seat (THB)" listing field (publicData.priceperseat).
   // Show it as e.g. "฿2,500 / seat" when there's no built-in price to show.
-  const seatPrice = builtInPriceMessagePlain ? null : parseSeatPrice(publicData?.priceperseat);
+  // Also used when the built-in price was saved in another currency (e.g. USD before the
+  // marketplace switched to THB), instead of showing "(USD)".
+  const hasPriceInOtherCurrency = !!price && price.currency !== config.currency;
+  const useBuiltInPrice = !!builtInPriceMessagePlain && !hasPriceInOtherCurrency;
+  const seatPrice = useBuiltInPrice ? null : parseSeatPrice(publicData?.priceperseat);
   const seatPriceFormatted = seatPrice != null ? intl.formatNumber(seatPrice) : null;
   const seatPriceMessage =
     seatPriceFormatted != null

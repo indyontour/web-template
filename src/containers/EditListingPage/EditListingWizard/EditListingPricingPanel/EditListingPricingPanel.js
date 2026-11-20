@@ -46,12 +46,44 @@ const getInitialValues = props => {
   // Note: publicData contains priceVariationsEnabled if listing is created with priceVariations enabled.
   const isPriceVariationsInUse = isPriceVariationsEnabled(publicData, listingTypeConfig);
 
-  return unitType === FIXED || isPriceVariationsInUse
+  const initialValues =
+    unitType === FIXED || isPriceVariationsInUse
+      ? {
+          ...getInitialValuesForPriceVariants(props, isPriceVariationsInUse),
+          ...getInitialValuesForStartTimeInterval(props),
+        }
+      : { price: listing?.attributes?.price };
+
+  // beaway: for trips without online payments, a price saved in an old marketplace currency
+  // (e.g. USD before the switch to THB) is emptied so the host can type it again,
+  // instead of the template's "You cannot edit the price" message.
+  const process = listingTypeConfig?.transactionType?.process;
+  return process && !isStripeRelatedProcessAlias(process)
+    ? clearPricesInOtherCurrency(initialValues, props.marketplaceCurrency)
+    : initialValues;
+};
+
+const isMoneyInOtherCurrency = (money, currency) =>
+  money instanceof Money && !!currency && money.currency !== currency;
+
+/**
+ * beaway: empty prices that are not in the marketplace currency.
+ *
+ * @param {Object} initialValues form initial values (price or priceVariants)
+ * @param {string} currency marketplace currency, e.g. 'THB'
+ * @returns {Object} initial values without prices in other currencies
+ */
+export const clearPricesInOtherCurrency = (initialValues, currency) => {
+  const { price, priceVariants } = initialValues;
+  const priceMaybe = isMoneyInOtherCurrency(price, currency) ? { price: null } : {};
+  const priceVariantsMaybe = Array.isArray(priceVariants)
     ? {
-        ...getInitialValuesForPriceVariants(props, isPriceVariationsInUse),
-        ...getInitialValuesForStartTimeInterval(props),
+        priceVariants: priceVariants.map(v =>
+          isMoneyInOtherCurrency(v.price, currency) ? { ...v, price: null } : v
+        ),
       }
-    : { price: listing?.attributes?.price };
+    : {};
+  return { ...initialValues, ...priceMaybe, ...priceVariantsMaybe };
 };
 
 // This is needed to show the listing's price consistently over XHR calls.
@@ -138,6 +170,10 @@ const EditListingPricingPanel = props => {
     ? initialValuesPrice.currency === marketplaceCurrency
     : !!marketplaceCurrency;
   const unitType = listing?.attributes?.publicData?.unitType;
+  // beaway: tell the host why the price field is empty (see clearPricesInOtherCurrency)
+  const savedPrice = listing?.attributes?.price;
+  const showPriceCurrencyChanged =
+    priceCurrencyValid && isMoneyInOtherCurrency(savedPrice, marketplaceCurrency);
 
   const panelHeadingProps = isPublished
     ? {
@@ -162,6 +198,14 @@ const EditListingPricingPanel = props => {
       <H3 as="h1">
         <FormattedMessage id={panelHeadingProps.id} values={{ ...panelHeadingProps.values }} />
       </H3>
+      {showPriceCurrencyChanged ? (
+        <p className={css.priceCurrencyChanged}>
+          <FormattedMessage
+            id="EditListingPricingPanel.priceCurrencyChanged"
+            values={{ oldCurrency: savedPrice.currency, marketplaceCurrency }}
+          />
+        </p>
+      ) : null}
       {priceCurrencyValid ? (
         <EditListingPricingForm
           className={css.form}

@@ -14,3 +14,8 @@
 .priceCurrencyInvalid {
   color: var(--colorFail);
 }
+
+.priceCurrencyChanged {
+  color: var(--colorAttentionDark);
+  margin: 0 0 24px 0;
+}
