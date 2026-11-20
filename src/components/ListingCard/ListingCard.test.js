@@ -112,7 +112,8 @@ describe('ListingCard', () => {
     });
     const card = getByRole('link');
     expect(card).toHaveTextContent('Local host');
-    expect(card).toHaveTextContent('Sat 15 Nov 07:00 · Departs Ekkamai');
+    expect(card).toHaveTextContent('15 Nov · 07:00');
+    expect(card).toHaveTextContent('Departs Ekkamai');
     expect(card).toHaveTextContent('฿350 / seat');
     expect(card).toHaveTextContent('Up to 3 seats');
     expect(card.querySelector('.seatsLow')).not.toBeNull();
@@ -206,5 +207,23 @@ describe('ListingCard', () => {
       messages: { 'ListingCard.pricePerSeat': '฿{priceValue} / seat' },
     });
     expect(getByRole('link')).not.toHaveTextContent('/ seat');
+  });
+});
+
+describe('formatTripDate (beaway)', () => {
+  const { formatTripDate } = require('./ListingCard.helpers');
+
+  it('shows the different ways hosts type dates the same way', () => {
+    expect(formatTripDate('Nov 18 / 7.00 AM')).toEqual('18 Nov · 7:00 AM');
+    expect(formatTripDate('30 Nov at 7:00 AM')).toEqual('30 Nov · 7:00 AM');
+    expect(formatTripDate('18 Nov / 07.00 AM')).toEqual('18 Nov · 7:00 AM');
+    expect(formatTripDate('14 November, 6pm')).toEqual('14 Nov · 6:00 PM');
+    expect(formatTripDate('Dec 2 07:30')).toEqual('2 Dec · 07:30');
+    expect(formatTripDate('Dec 2')).toEqual('2 Dec');
+  });
+
+  it('keeps text it cannot read as the host typed it', () => {
+    expect(formatTripDate('Every Saturday morning')).toEqual('Every Saturday morning');
+    expect(formatTripDate('')).toEqual('');
   });
 });

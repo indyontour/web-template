@@ -13,6 +13,8 @@ import { createSlug } from '../../util/urlHelpers';
 import {
   AspectRatioWrapper,
   AvatarSmall,
+  IconDate,
+  IconLocation,
   NamedLink,
   ResponsiveImage,
   ListingCardThumbnail,
@@ -125,7 +127,7 @@ export const ListingCard = props => {
   } = translations;
 
   // beaway: badge, date + departure point, seats left
-  const { badge, tripDetails, seatsLeft } = getTripCardDetails(listing, intl);
+  const { badge, tripDate, departurePoint, seatsLeft } = getTripCardDetails(listing, intl);
   // beaway: host avatar, name and verified mark under the title
   const host = showAuthorInfo && listing?.author?.attributes ? { author: listing.author } : null;
 
@@ -202,7 +204,22 @@ export const ListingCard = props => {
             <VerifiedHostMark user={host.author} />
           </div>
         ) : null}
-        <div className={css.tripDetails}>{tripDetails}</div>
+        <div className={css.tripDetails}>
+          {tripDate ? (
+            <div className={css.tripLine}>
+              <IconDate className={css.tripIcon} />
+              <span className={css.tripText}>{tripDate}</span>
+            </div>
+          ) : null}
+          {departurePoint ? (
+            <div className={css.tripLine}>
+              <IconLocation rootClassName={css.tripIconLocation} />
+              <span className={css.tripText}>
+                {intl.formatMessage({ id: 'ListingCard.departs' }, { point: departurePoint })}
+              </span>
+            </div>
+          ) : null}
+        </div>
         <div className={css.bottomRow}>
           <div className={css.price} title={showPrice ? priceTooltip : undefined}>
             {showPrice ? priceMessage : null}

@@ -122,19 +122,42 @@
   color: #1d2a24;
 }
 
-/* 6px margin + 2 lines x 20px = 46px */
+/* 6px margin + 2 lines x 20px = 46px.
+   One line for the date, one for the departure point, each with a small icon. */
 .tripDetails {
   height: 40px;
   margin-top: 6px;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+}
+
+.tripLine {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 20px;
+  min-width: 0;
 
   font-size: 14px;
   line-height: 20px;
   font-weight: var(--fontWeightRegular);
   color: #4a5550;
+}
+
+.tripIcon {
+  flex-shrink: 0;
+  fill: #7a8580;
+}
+
+.tripIconLocation {
+  flex-shrink: 0;
+  fill: none;
+  stroke: #7a8580;
+  stroke-width: 2px;
+}
+
+.tripText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* 8px margin + 44px = 52px.
