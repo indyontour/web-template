@@ -34,6 +34,7 @@ import {
   isInquiryProcess,
   isPurchaseProcess,
   isDownloadProcess,
+  isStripeRelatedProcessAlias,
   resolveLatestProcessName,
 } from '../../transactions/transaction';
 
@@ -46,7 +47,7 @@ import {
   VerifiedHostMark,
 } from '../../components';
 import PriceVariantPicker from './PriceVariantPicker/PriceVariantPicker';
-import SubmitFinePrint from './SubmitFinePrint/SubmitFinePrint';
+import SubmitFinePrint, { SubmitFinePrintNoOnlinePayment } from './SubmitFinePrint/SubmitFinePrint';
 
 import css from './OrderPanel.module.css';
 
@@ -343,6 +344,12 @@ const OrderPanel = props => {
   const price = listing?.attributes?.price;
   const isInquiry = isInquiryProcess(processName);
   const isBooking = isBookingProcess(processName);
+  // beaway: booking processes without Stripe (default-booking) say "pay the host" instead of
+  // "You won't be charged yet"
+  const BookingFinePrint =
+    isBooking && !isStripeRelatedProcessAlias(transactionProcessAlias)
+      ? SubmitFinePrintNoOnlinePayment
+      : SubmitFinePrint;
   const isPurchase = isPurchaseProcess(processName);
   const isNegotiation = isNegotiationProcess(processName);
   const isDownload = isDownloadProcess(processName);
@@ -521,7 +528,7 @@ const OrderPanel = props => {
             startDatePlaceholder={intl.formatDate(TODAY, dateFormattingOptions)}
             startTimeInterval={startTimeInterval}
             timeZone={timeZone}
-            finePrintComponent={SubmitFinePrint}
+            finePrintComponent={BookingFinePrint}
             {...priceVariantsMaybe}
             {...sharedProps}
           />
@@ -537,7 +544,7 @@ const OrderPanel = props => {
             startDatePlaceholder={intl.formatDate(TODAY, dateFormattingOptions)}
             endDatePlaceholder={intl.formatDate(TODAY, dateFormattingOptions)}
             timeZone={timeZone}
-            finePrintComponent={SubmitFinePrint}
+            finePrintComponent={BookingFinePrint}
             {...priceVariantsMaybe}
             {...sharedProps}
           />
@@ -550,7 +557,7 @@ const OrderPanel = props => {
             monthlyTimeSlots={monthlyTimeSlots}
             onFetchTimeSlots={onFetchTimeSlots}
             timeZone={timeZone}
-            finePrintComponent={SubmitFinePrint}
+            finePrintComponent={BookingFinePrint}
             {...priceVariantsMaybe}
             {...sharedProps}
           />

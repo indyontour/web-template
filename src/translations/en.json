@@ -820,6 +820,7 @@
   "OrderPanel.priceInMobileCTA": "{priceValue}",
   "OrderPanel.subTitleClosedListing": "Sorry, this listing has been closed.",
   "OrderPanel.unknownTransactionProcess": "Oops, it looks like the marketplace processes aren't up to date. Please contact the marketplace operator.",
+  "OrderPanel.noOnlinePaymentInfo": "No online payment. You pay the host on the day if they accept.",
   "OrderPanel.youWontBeChargedInfo": "You won't be charged yet",
   "Page.schemaDescription": "An online marketplace.",
   "Page.schemaTitle": "{marketplaceName}",
