@@ -174,7 +174,12 @@ const PriceMaybe = props => {
   );
   const pricePerUnit = (
     <span className={css.perUnit}>
-      <FormattedMessage id="OrderPanel.perUnit" values={{ unitType }} />
+      {unitType === 'fixed' ? (
+        // beaway: trips are priced per seat; own key so Console texts don't hide it
+        <FormattedMessage id="OrderPanel.perSeat" />
+      ) : (
+        <FormattedMessage id="OrderPanel.perUnit" values={{ unitType }} />
+      )}
     </span>
   );
 
@@ -189,7 +194,12 @@ const PriceMaybe = props => {
         />
       </div>
       <div className={css.perUnitInCTA}>
-        <FormattedMessage id="OrderPanel.perUnit" values={{ unitType }} />
+        {unitType === 'fixed' ? (
+          // beaway: trips are priced per seat; own key so Console texts don't hide it
+          <FormattedMessage id="OrderPanel.perSeat" />
+        ) : (
+          <FormattedMessage id="OrderPanel.perUnit" values={{ unitType }} />
+        )}
       </div>
     </div>
   ) : (

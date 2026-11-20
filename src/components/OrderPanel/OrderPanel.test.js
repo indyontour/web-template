@@ -442,7 +442,7 @@ describe('OrderPanel', () => {
       expect(queryAllByText('title!')).toHaveLength(2);
       expect(queryAllByText('OrderPanel.price')).toHaveLength(1);
       expect(queryAllByText('OrderPanel.priceInMobileCTA')).toHaveLength(1);
-      expect(queryAllByText('OrderPanel.perUnit')).toHaveLength(1);
+      expect(queryAllByText('OrderPanel.perSeat')).toHaveLength(1);
       expect(queryAllByText('OrderPanel.author')).toHaveLength(2);
       expect(getByText('BookingFixedDurationForm.bookingStartTitle')).toBeInTheDocument();
       expect(getByText('FieldDateAndTimeInput.startTime')).toBeInTheDocument();

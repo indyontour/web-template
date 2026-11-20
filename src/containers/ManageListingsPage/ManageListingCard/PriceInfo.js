@@ -69,7 +69,10 @@ const PriceInfo = props => {
 
   const perUnitString =
     isBookable && publicData?.unitType
-      ? intl.formatMessage({ id: 'ManageListingCard.perUnit' }, { unitType: publicData.unitType })
+      ? publicData.unitType === 'fixed'
+        ? // beaway: trips are priced per seat; own key so Console texts don't hide it
+          intl.formatMessage({ id: 'ManageListingCard.perSeat' })
+        : intl.formatMessage({ id: 'ManageListingCard.perUnit' }, { unitType: publicData.unitType })
       : '';
 
   const priceValue = <span className={css.priceValue}>{formattedPrice}</span>;

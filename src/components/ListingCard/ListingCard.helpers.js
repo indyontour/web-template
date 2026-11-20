@@ -147,7 +147,10 @@ export const getListingCardTranslations = (listing, config, intl) => {
     : 'ListingCard.price';
 
   const perUnitString = isBookable
-    ? intl.formatMessage({ id: 'ListingCard.perUnit' }, { unitType: publicData?.unitType })
+    ? publicData?.unitType === 'fixed'
+      ? // beaway: trips are priced per seat; own key so Console texts don't hide it
+        intl.formatMessage({ id: 'ListingCard.perSeat' })
+      : intl.formatMessage({ id: 'ListingCard.perUnit' }, { unitType: publicData?.unitType })
     : '';
 
   // Visible price block uses JSX spans for styling; aria-label needs a plain string.
