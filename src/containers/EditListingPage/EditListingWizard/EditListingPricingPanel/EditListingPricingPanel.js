@@ -7,7 +7,11 @@ import { LISTING_STATE_DRAFT, propTypes } from '../../../../util/types';
 import { types as sdkTypes } from '../../../../util/sdkLoader';
 import { isPriceVariationsEnabled } from '../../../../util/configHelpers';
 import { isValidCurrencyForTransactionProcess } from '../../../../util/fieldHelpers';
-import { FIXED, isBookingProcess } from '../../../../transactions/transaction';
+import {
+  FIXED,
+  isBookingProcess,
+  isStripeRelatedProcessAlias,
+} from '../../../../transactions/transaction';
 
 // Import shared components
 import { H3, ListingLink } from '../../../../components';
@@ -176,8 +180,12 @@ const EditListingPricingPanel = props => {
               // We might remove or improve this setup in the future.
 
               // This adds startTimeInterval to publicData
+              // beaway: trips without online payments don't ask for the interval. 'quarterHour'
+              // lets any departure time (e.g. 07:15) be booked; a trip's availability slot
+              // equals the trip length, so there's still only one start time per departure.
+              const isTripWithoutPayments = !isStripeRelatedProcessAlias(process);
               const startTimeIntervalChanges = handleSubmitValuesForStartTimeInterval(
-                values,
+                isTripWithoutPayments ? { ...values, startTimeInterval: 'quarterHour' } : values,
                 publicDataUpdates
               );
               // This adds lowest price variant to the listing.attributes.price and priceVariants to listing.attributes.publicData

@@ -9,7 +9,11 @@ import { FormattedMessage, useIntl } from '../../../../util/reactIntl';
 import * as validators from '../../../../util/validators';
 import { formatMoney } from '../../../../util/currency';
 import { types as sdkTypes } from '../../../../util/sdkLoader';
-import { FIXED, isBookingProcess } from '../../../../transactions/transaction';
+import {
+  FIXED,
+  isBookingProcess,
+  isStripeRelatedProcessAlias,
+} from '../../../../transactions/transaction';
 
 // Import shared components
 import { Button, Form, FieldCurrencyInput } from '../../../../components';
@@ -134,6 +138,9 @@ export const EditListingPricingForm = props => (
       const isBooking = isBookingProcess(process);
 
       const isFixedLengthBooking = isBooking && unitType === FIXED;
+      // beaway: trips (booking without online payments) are one-off departures, so the host
+      // isn't asked how often bookings may start. The panel saves 'quarterHour' for them.
+      const showStartTimeInterval = isFixedLengthBooking && isStripeRelatedProcessAlias(process);
       const isBookingPriceVariationsInUse = isBooking && isPriceVariationsInUse;
       const isUsingPriceVariants = isFixedLengthBooking || isBookingPriceVariationsInUse;
 
@@ -171,7 +178,7 @@ export const EditListingPricingForm = props => (
             />
           )}
 
-          {isFixedLengthBooking ? (
+          {showStartTimeInterval ? (
             <StartTimeInterval
               name="startTimeInterval"
               idPrefix={`${formId}_startTimeInterval`}
