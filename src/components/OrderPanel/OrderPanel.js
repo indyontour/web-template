@@ -37,7 +37,14 @@ import {
   resolveLatestProcessName,
 } from '../../transactions/transaction';
 
-import { ModalInMobile, PrimaryButton, AvatarSmall, H1, H2 } from '../../components';
+import {
+  ModalInMobile,
+  PrimaryButton,
+  AvatarSmall,
+  H1,
+  H2,
+  VerifiedHostMark,
+} from '../../components';
 import PriceVariantPicker from './PriceVariantPicker/PriceVariantPicker';
 import SubmitFinePrint from './SubmitFinePrint/SubmitFinePrint';
 
@@ -481,6 +488,8 @@ const OrderPanel = props => {
             <span className={css.providerNamePlain}>
               <FormattedMessage id="OrderPanel.author" values={{ name: authorDisplayName }} />
             </span>
+            {/* beaway: same green ✓ as on the trip cards */}
+            <VerifiedHostMark user={author} className={css.verifiedMark} />
           </div>
         )}
 

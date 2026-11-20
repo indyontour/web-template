@@ -600,7 +600,7 @@
   "ListingCard.badge.localHost": "Local host",
   "ListingCard.badge.licensedOperator": "Licensed operator",
   "ListingCard.departs": "Departs {point}",
-  "ListingCard.seatsLeft": "{count, plural, one {# seat left} other {# seats left}}",
+  "ListingCard.seatsUpTo": "{count, plural, one {Up to # seat} other {Up to # seats}}",
   "ListingCard.seatsFull": "Full",
   "ListingCard.priceStartingFrom": "From {priceValue} {pricePerUnit}",
   "ListingCard.screenreader.label": "{listingTitle}, {formattedPrice}",
@@ -1547,5 +1547,6 @@
   "UserNav.accountSettings": "Account settings",
   "UserNav.profileSettings": "Profile settings",
   "UserNav.screenreader.userNav": "User profile navigation",
-  "UserNav.yourListings": "Your listings"
+  "UserNav.yourListings": "Your listings",
+  "VerifiedHostMark.label": "Verified host"
 }

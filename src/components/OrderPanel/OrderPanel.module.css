@@ -107,6 +107,10 @@
   }
 }
 
+.verifiedMark {
+  margin-left: 6px;
+}
+
 .providerNameLinked {
   display: none;
 

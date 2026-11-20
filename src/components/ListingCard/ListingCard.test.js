@@ -84,14 +84,68 @@ describe('ListingCard', () => {
         'ListingCard.pricePerSeat': '฿{priceValue} / seat',
         'ListingCard.badge.localHost': 'Local host',
         'ListingCard.departs': 'Departs {point}',
-        'ListingCard.seatsLeft': '{count, plural, one {# seat left} other {# seats left}}',
+        'ListingCard.seatsUpTo': '{count, plural, one {Up to # seat} other {Up to # seats}}',
       },
     });
     const card = getByRole('link');
     expect(card).toHaveTextContent('Local host');
     expect(card).toHaveTextContent('Sat 15 Nov 07:00 · Departs Ekkamai');
     expect(card).toHaveTextContent('฿350 / seat');
-    expect(card).toHaveTextContent('3 seats left');
+    expect(card).toHaveTextContent('Up to 3 seats');
+    expect(card.querySelector('.seatsLow')).not.toBeNull();
+  });
+
+  it('shows "Up to N seats" without the warning color when there are more than 3 seats', () => {
+    const config = getConfig();
+    const listing = createListing(
+      'listing1',
+      { price: null, publicData: { listingType: 'local-host-trip', seatsavailable: 8 } },
+      { author: createUser('user1') }
+    );
+    const { getByRole } = render(<ListingCard listing={listing} />, {
+      config,
+      messages: {
+        'ListingCard.seatsUpTo': '{count, plural, one {Up to # seat} other {Up to # seats}}',
+      },
+    });
+    const card = getByRole('link');
+    expect(card).toHaveTextContent('Up to 8 seats');
+    expect(card.querySelector('.seatsLow')).toBeNull();
+  });
+
+  it('shows the host name and a verified mark only for verified hosts', () => {
+    const config = getConfig();
+    const messages = {
+      'ListingCard.author': '{authorName}',
+      'VerifiedHostMark.label': 'Verified host',
+    };
+    const verifiedHost = createUser('user1', {
+      profile: {
+        displayName: 'Nok',
+        abbreviatedName: 'N',
+        metadata: { verifiedhost: 'yes' },
+      },
+    });
+    const otherHost = createUser('user2', {
+      profile: { displayName: 'Bee', abbreviatedName: 'B', metadata: { verifiedhost: 'no' } },
+    });
+
+    const verified = render(
+      <ListingCard listing={createListing('listing1', {}, { author: verifiedHost })} />,
+      { config, messages }
+    );
+    const verifiedCard = verified.getByRole('link');
+    expect(verifiedCard).toHaveTextContent('Nok');
+    expect(verifiedCard).toHaveTextContent('Verified host');
+    verified.unmount();
+
+    const other = render(
+      <ListingCard listing={createListing('listing2', {}, { author: otherHost })} />,
+      { config, messages }
+    );
+    const otherCard = other.getByRole('link');
+    expect(otherCard).toHaveTextContent('Bee');
+    expect(otherCard).not.toHaveTextContent('Verified host');
   });
 
   it('shows "Full" and the licensed operator badge when no seats are left', () => {

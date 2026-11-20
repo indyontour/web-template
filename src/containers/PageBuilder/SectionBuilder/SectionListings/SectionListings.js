@@ -99,9 +99,9 @@ const calculateCarouselHeight = (
   const containerPaddingBottom = 24;
 
   // beaway: the trip card's info block has fixed heights (see ListingCard.module.css):
-  // padding 16+16, badge 30, title 48, trip details 46, price row 52, border 2 = 210px.
+  // padding 16+16, badge 30, title 48, host row 40, trip details 46, price row 52, border 2 = 250px.
   // It's the same on mobile and desktop.
-  const cardInfoHeight = 16 + 30 + 48 + 46 + 52 + 16 + 2;
+  const cardInfoHeight = 16 + 30 + 48 + 40 + 46 + 52 + 16 + 2;
   const cardInfoHeightMobile = cardInfoHeight;
 
   const parsedAspectRatio = parseAspectRatio(thumbnailAspectRatio);
@@ -280,12 +280,22 @@ const SectionListings = props => {
     }
   }, []);
 
+  // beaway: move by the number of cards actually visible, not always numColumns.
+  // On phones only 1 card fits, so the arrows step one card at a time.
+  const getSlideWidth = slider => {
+    const cardWidth = slider.firstElementChild?.querySelector('a')?.clientWidth;
+    if (!cardWidth) return 0;
+    const visibleCards = Math.min(
+      numColumns,
+      Math.max(1, Math.floor(slider.clientWidth / cardWidth))
+    );
+    return visibleCards * cardWidth;
+  };
+
   const onSlideLeft = e => {
     const slider = sliderRef.current;
     if (!slider) return;
-    const sliderChildElement = sliderRef.current.firstElementChild?.querySelector('a');
-    const slideWidth = numColumns * sliderChildElement?.clientWidth;
-    slider.scrollLeft = slider.scrollLeft - slideWidth;
+    slider.scrollLeft = slider.scrollLeft - getSlideWidth(slider);
     // Fix for Safari
     e.target.focus();
   };
@@ -293,9 +303,7 @@ const SectionListings = props => {
   const onSlideRight = e => {
     const slider = sliderRef.current;
     if (!slider) return;
-    const sliderChildElement = sliderRef.current.firstElementChild?.querySelector('a');
-    const slideWidth = numColumns * sliderChildElement?.clientWidth;
-    slider.scrollLeft = slider.scrollLeft + slideWidth;
+    slider.scrollLeft = slider.scrollLeft + getSlideWidth(slider);
     // Fix for Safari
     e.target.focus();
   };

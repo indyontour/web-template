@@ -34,6 +34,25 @@ exports[`ListingCard matches snapshot 1`] = `
       listing1 title
     </div>
     <div
+      class="hostRow"
+    >
+      <div
+        class="smallAvatar hostAvatar"
+        title="user1 display name"
+      >
+        <span
+          class="initialsSmall"
+        >
+          TT
+        </span>
+      </div>
+      <span
+        class="hostName"
+      >
+        ListingCard.author
+      </span>
+    </div>
+    <div
       class="tripDetails"
     />
     <div
@@ -82,6 +101,25 @@ exports[`ListingCard matches snapshot without price 1`] = `
       class="title"
     >
       listing1 title
+    </div>
+    <div
+      class="hostRow"
+    >
+      <div
+        class="smallAvatar hostAvatar"
+        title="user1 display name"
+      >
+        <span
+          class="initialsSmall"
+        >
+          TT
+        </span>
+      </div>
+      <span
+        class="hostName"
+      >
+        ListingCard.author
+      </span>
     </div>
     <div
       class="tripDetails"

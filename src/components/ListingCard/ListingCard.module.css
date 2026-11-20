@@ -4,7 +4,7 @@
  * beaway trip card, matching the "Upcoming trips" mockup:
  * photo on top, then badge, title, date + departure point, and price / seats left at the bottom.
  *
- * ⚠️ The info block has fixed heights so all cards line up. Its total height (210px incl. border)
+ * ⚠️ The info block has fixed heights so all cards line up. Its total height (250px incl. border)
  * is hardcoded in SectionListings.js calculateCarouselHeight() as cardInfoHeight.
  * If you change heights here, update that number too.
  */
@@ -46,7 +46,7 @@
   object-fit: cover;
 }
 
-/* 16 + 30 + 48 + 46 + 52 + 16 = 208px */
+/* 16 + 30 + 48 + 40 + 46 + 52 + 16 = 248px */
 .info {
   display: flex;
   flex-direction: column;
@@ -94,6 +94,31 @@
   font-size: 18px;
   line-height: 24px;
   font-weight: var(--fontWeightBold);
+  color: #1d2a24;
+}
+
+/* 32px avatar + 8px margin = 40px */
+.hostRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  margin-top: 8px;
+  min-width: 0;
+}
+
+.hostAvatar {
+  flex-shrink: 0;
+}
+
+.hostName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: var(--fontWeightMedium);
   color: #1d2a24;
 }
 
@@ -146,8 +171,13 @@
   font-size: 16px;
   line-height: 22px;
   font-weight: var(--fontWeightBold);
-  color: #b9471b;
+  color: #4a5550;
   white-space: nowrap;
+}
+
+/* Warning color only for 1–3 seats */
+.seatsLow {
+  color: #b9471b;
 }
 
 .seatsFull {

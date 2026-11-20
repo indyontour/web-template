@@ -279,7 +279,7 @@ const getSearchParams = config => {
   return {
     page: 1,
     perPage: 24,
-    include: ['author', 'images'],
+    include: ['author', 'author.profileImage', 'images'],
     'fields.listing': [
       'title',
       'geolocation',
@@ -301,12 +301,14 @@ const getSearchParams = config => {
       'publicData.departurepoint',
       'publicData.seatsavailable',
     ],
-    'fields.user': ['profile.displayName', 'profile.abbreviatedName'],
+    'fields.user': ['profile.displayName', 'profile.abbreviatedName', 'profile.metadata'],
     'fields.image': [
       'variants.scaled-small',
       'variants.scaled-medium',
       `variants.${variantPrefix}`,
       `variants.${variantPrefix}-2x`,
+      'variants.square-small',
+      'variants.square-small2x',
     ],
     ...createImageVariantConfig(`${variantPrefix}`, 400, aspectRatio),
     ...createImageVariantConfig(`${variantPrefix}-2x`, 800, aspectRatio),

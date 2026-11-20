@@ -12,9 +12,11 @@ import { createSlug } from '../../util/urlHelpers';
 
 import {
   AspectRatioWrapper,
+  AvatarSmall,
   NamedLink,
   ResponsiveImage,
   ListingCardThumbnail,
+  VerifiedHostMark,
 } from '../../components';
 
 import { getListingCardTranslations, getTripCardDetails } from './ListingCard.helpers';
@@ -124,6 +126,8 @@ export const ListingCard = props => {
 
   // beaway: badge, date + departure point, seats left
   const { badge, tripDetails, seatsLeft } = getTripCardDetails(listing, intl);
+  // beaway: host avatar, name and verified mark under the title
+  const host = showAuthorInfo && listing?.author?.attributes ? { author: listing.author } : null;
 
   const classes = classNames(rootClassName || css.root, className);
 
@@ -190,13 +194,26 @@ export const ListingCard = props => {
         </div>
         {/* Without a photo, the placeholder above already shows the title */}
         <div className={css.title}>{showListingImage ? titleFormatted : null}</div>
+        {host ? (
+          <div className={css.hostRow}>
+            {/* The whole card is already a link, so the avatar must not be another link */}
+            <AvatarSmall className={css.hostAvatar} user={host.author} disableProfileLink />
+            <span className={css.hostName}>{authorName}</span>
+            <VerifiedHostMark user={host.author} />
+          </div>
+        ) : null}
         <div className={css.tripDetails}>{tripDetails}</div>
         <div className={css.bottomRow}>
           <div className={css.price} title={showPrice ? priceTooltip : undefined}>
             {showPrice ? priceMessage : null}
           </div>
           {seatsLeft ? (
-            <div className={classNames(css.seatsLeft, { [css.seatsFull]: seatsLeft.isFull })}>
+            <div
+              className={classNames(css.seatsLeft, {
+                [css.seatsLow]: seatsLeft.isLow,
+                [css.seatsFull]: seatsLeft.isFull,
+              })}
+            >
               {seatsLeft.text}
             </div>
           ) : null}

@@ -432,7 +432,8 @@ export const loadData = (params, search, config) => (dispatch, getState, sdk) =>
       ...listingTypeVariantMaybe,
       page,
       perPage: RESULT_PAGE_SIZE,
-      include: ['author', 'images'],
+      // beaway: author.profileImage for the host avatar on trip cards
+      include: ['author', 'author.profileImage', 'images'],
       'fields.listing': [
         'title',
         'geolocation',
@@ -456,12 +457,20 @@ export const loadData = (params, search, config) => (dispatch, getState, sdk) =>
         'publicData.departurepoint',
         'publicData.seatsavailable',
       ],
-      'fields.user': ['profile.displayName', 'profile.abbreviatedName'],
+      'fields.user': [
+        'profile.displayName',
+        'profile.abbreviatedName',
+        // beaway: verifiedhost (metadata) for the green ✓ on trip cards
+        'profile.metadata',
+      ],
       'fields.image': [
         'variants.scaled-small',
         'variants.scaled-medium',
         `variants.${variantPrefix}`,
         `variants.${variantPrefix}-2x`,
+        // beaway: host avatar on trip cards
+        'variants.square-small',
+        'variants.square-small2x',
       ],
       ...createImageVariantConfig(`${variantPrefix}`, 400, aspectRatio),
       ...createImageVariantConfig(`${variantPrefix}-2x`, 800, aspectRatio),

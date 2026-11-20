@@ -42,7 +42,10 @@ const parseSeatPrice = value => {
 // beaway: label shown at the top of each trip card, by listing type.
 const TRIP_BADGES = {
   'local-host-trip': { id: 'ListingCard.badge.localHost', variant: 'localHost' },
-  'licensed-operator-trip': { id: 'ListingCard.badge.licensedOperator', variant: 'licensedOperator' },
+  'licensed-operator-trip': {
+    id: 'ListingCard.badge.licensedOperator',
+    variant: 'licensedOperator',
+  },
 };
 
 const cleanText = value => (typeof value === 'string' ? value.trim() : '');
@@ -66,8 +69,12 @@ const parseSeats = value => {
  * @returns {Object}
  *   - badge: { label, variant } or null ("Local host" / "Licensed operator")
  *   - tripDetails: e.g. "30 Nov at 7:00 AM · Departs Maya Mall", or ''
- *   - seatsLeft: { text, isFull } or null, e.g. "3 seats left" / "Full"
+ *   - seatsLeft: { text, isFull, isLow } or null, e.g. "Up to 3 seats" / "Full".
+ *     isLow is true for 1–3 seats (shown in the warning color).
  */
+// beaway: "Up to N seats" turns orange when N is this or fewer
+const LOW_SEATS_LIMIT = 3;
+
 export const getTripCardDetails = (listing, intl) => {
   const { publicData } = listing?.attributes || {};
   const { listingType, tripdateandtime, departurepoint, seatsavailable } = publicData || {};
@@ -89,8 +96,9 @@ export const getTripCardDetails = (listing, intl) => {
       : seats === 0
       ? { text: intl.formatMessage({ id: 'ListingCard.seatsFull' }), isFull: true }
       : {
-          text: intl.formatMessage({ id: 'ListingCard.seatsLeft' }, { count: seats }),
+          text: intl.formatMessage({ id: 'ListingCard.seatsUpTo' }, { count: seats }),
           isFull: false,
+          isLow: seats <= LOW_SEATS_LIMIT,
         };
 
   return { badge, tripDetails, seatsLeft };

@@ -128,6 +128,7 @@ export { default as UserNav } from './UserNav/UserNav';
 ///////////////////////////////////////////////
 
 export { default as Avatar, AvatarSmall, AvatarMedium, AvatarLarge } from './Avatar/Avatar';
+export { default as VerifiedHostMark } from './VerifiedHostMark/VerifiedHostMark';
 export { default as CustomExtendedDataField } from './CustomExtendedDataField/CustomExtendedDataField';
 export const CustomExtendedDataSection = loadable(() => import(/* webpackChunkName: "CustomExtendedDataSection" */ './CustomExtendedDataSection/CustomExtendedDataSection'));
 export { default as FileUpload } from './FileUpload/FileUpload'

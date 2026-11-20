@@ -52,7 +52,8 @@ const fetchFeaturedListingsPayloadCreator = async (arg, thunkAPI) => {
         page: 1,
         minStock: 1,
         stockMode: 'match-undefined',
-        include: ['images', 'author'],
+        // beaway: author.profileImage for the host avatar on trip cards
+        include: ['images', 'author', 'author.profileImage'],
         'fields.listing': [
           'title',
           'geolocation',
@@ -79,6 +80,9 @@ const fetchFeaturedListingsPayloadCreator = async (arg, thunkAPI) => {
           'variants.listing-card-2x',
           'variants.scaled-small',
           'variants.scaled-medium',
+          // beaway: host avatar on trip cards
+          'variants.square-small',
+          'variants.square-small2x',
         ],
         ...createImageVariantConfig(`${variantPrefix}`, 400, aspectRatio),
         ...createImageVariantConfig(`${variantPrefix}-2x`, 800, aspectRatio),
