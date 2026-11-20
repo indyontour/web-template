@@ -10,23 +10,35 @@
  * To stop using them, empty the array below or delete this file and its import in
  * src/util/configHelpers.js (mergeListingConfig).
  */
+// Shared settings: booking without payments, one fixed-length trip, several seats.
+const bookingTripSettings = {
+  transactionType: {
+    process: 'default-booking',
+    alias: 'default-booking/release-1',
+    unitType: 'fixed',
+  },
+  availabilityType: 'multipleSeats',
+  priceVariations: {
+    enabled: false,
+  },
+  defaultListingFields: {
+    location: true,
+    payoutDetails: false,
+  },
+};
+
+// The listing type decides the card badge (see TRIP_BADGES in ListingCard.helpers.js).
+// 'test-trip-booking' keeps its original key so listings already created with it still work.
 const testListingTypes = [
   {
     listingType: 'test-trip-booking',
-    label: 'TEST trip booking (localhost only)',
-    transactionType: {
-      process: 'default-booking',
-      alias: 'default-booking/release-1',
-      unitType: 'fixed',
-    },
-    availabilityType: 'multipleSeats',
-    priceVariations: {
-      enabled: false,
-    },
-    defaultListingFields: {
-      location: true,
-      payoutDetails: false,
-    },
+    label: 'TEST licensed operator booking (localhost only)',
+    ...bookingTripSettings,
+  },
+  {
+    listingType: 'test-local-host-booking',
+    label: 'TEST local host booking (localhost only)',
+    ...bookingTripSettings,
   },
 ];
 

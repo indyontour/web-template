@@ -77,12 +77,12 @@ describe('ListingCard', () => {
       config,
       messages: {
         'ListingCard.pricePerSeat': '฿{priceValue} / seat',
-        'ListingCard.badge.localHost': 'Local host',
+        'ListingCard.badge.licensedOperator': 'Licensed operator',
       },
     });
     expect(getByRole('link')).toHaveTextContent('฿1,000 / seat');
     expect(getByRole('link')).not.toHaveTextContent('(EUR)');
-    expect(getByText('Local host')).toBeInTheDocument();
+    expect(getByText('Licensed operator')).toBeInTheDocument();
   });
 
   it('shows the beaway trip badge, date, departure point and seats left', () => {
