@@ -1,3 +1,26 @@
+;; beaway: Sharetribe's default-booking, edited to work WITHOUT Stripe / online payments.
+;; Kept under the default-booking name so Console's "Calendar booking" listing types use it.
+;; The original Sharetribe version is in Git history.
+;;
+;; - The traveler (customer) requests a date + seats, the host (provider) accepts or declines.
+;; - Seats are held while the request is pending (create-pending-booking) and freed on decline/expire.
+;; - Trips can be requested until departure, also when less than 12 hours away.
+;; - A request (and its seat hold) expires 24 hours after it was made, or 12 hours before
+;;   departure if that comes first (:transition/expire-before-cancellation-window).
+;;   A request made less than 12 hours before departure can wait until departure
+;;   (:transition/expire), since the 12-hour moment has already passed.
+;; - The traveler can withdraw a pending request at any time before the host answers (seats are freed).
+;; - The traveler can cancel an accepted booking until 12 hours before departure.
+;;   After that the booking moves to :state/cancellation-closed. A booking accepted less than
+;;   12 hours before departure moves there right away, so it can't be cancelled by the traveler.
+;; - The host (and the operator) can cancel an accepted booking at any time until the trip completes.
+;; - The trip completes automatically when the booking ends, then both sides can review for 7 days.
+;; - Line items are still set (privileged) so the request page and emails can show
+;;   "price × seats = total", paid to the host on the day. Nothing is charged.
+;;
+;; State and transition names from Sharetribe's default-booking are kept on purpose, so the
+;; web template keeps working. To add instant booking later, add one more initial transition
+;; (e.g. :transition/request-instant) that goes straight to :state/accepted.
 {:format :v3,
  :transitions
  [{:name :transition/inquire,
@@ -9,111 +32,103 @@
    :actions
    [{:name :action/update-protected-data}
     {:name :action/create-pending-booking, :config {:type :time}}
-    {:name :action/privileged-set-line-items}
-    {:name :action/stripe-create-payment-intent}],
-   :to :state/pending-payment,
+    {:name :action/privileged-set-line-items}],
+   :to :state/preauthorized,
    :privileged? true}
   {:name :transition/request-payment-after-inquiry,
    :actor :actor.role/customer,
    :actions
    [{:name :action/update-protected-data}
     {:name :action/create-pending-booking, :config {:type :time}}
-    {:name :action/privileged-set-line-items}
-    {:name :action/stripe-create-payment-intent}],
+    {:name :action/privileged-set-line-items}],
    :from :state/inquiry,
-   :to :state/pending-payment,
+   :to :state/preauthorized,
    :privileged? true}
-  {:name :transition/expire-payment,
-   :at
-   {:fn/plus
-    [{:fn/timepoint [:time/first-entered-state :state/pending-payment]}
-     {:fn/period ["PT15M"]}]},
-   :actions
-   [{:name :action/calculate-full-refund}
-    {:name :action/stripe-refund-payment}
-    ;; Keep this action last in the list of actions for
-    ;; the transition
-    {:name :action/decline-booking}],
-   :from :state/pending-payment,
-   :to :state/payment-expired}
-  {:name :transition/confirm-payment,
-   :actor :actor.role/customer,
-   :actions [{:name :action/stripe-confirm-payment-intent}],
-   :from :state/pending-payment,
-   :to :state/preauthorized}
   {:name :transition/accept,
    :actor :actor.role/provider,
-   :actions
-   [{:name :action/accept-booking}
-    {:name :action/stripe-capture-payment-intent}],
+   :actions [{:name :action/accept-booking}],
    :from :state/preauthorized,
    :to :state/accepted}
   {:name :transition/operator-accept,
    :actor :actor.role/operator,
-   :actions
-   [{:name :action/accept-booking}
-    {:name :action/stripe-capture-payment-intent}],
+   :actions [{:name :action/accept-booking}],
    :from :state/preauthorized,
    :to :state/accepted}
   {:name :transition/decline,
    :actor :actor.role/provider,
-   :actions
-   [{:name :action/calculate-full-refund}
-    {:name :action/stripe-refund-payment}
-    ;; Keep this action last in the list of actions for
-    ;; the transition
-    {:name :action/decline-booking}],
+   :actions [{:name :action/decline-booking}],
    :from :state/preauthorized,
    :to :state/declined}
   {:name :transition/operator-decline,
    :actor :actor.role/operator,
-   :actions
-   [{:name :action/calculate-full-refund}
-    {:name :action/stripe-refund-payment}
-    ;; Keep this action last in the list of actions for
-    ;; the transition
-    {:name :action/decline-booking}],
+   :actions [{:name :action/decline-booking}],
    :from :state/preauthorized,
    :to :state/declined}
+  {:name :transition/customer-withdraw-request,
+   :actor :actor.role/customer,
+   :actions [{:name :action/decline-booking}],
+   :from :state/preauthorized,
+   :to :state/withdrawn}
   {:name :transition/expire,
    :at
    {:fn/min
     [{:fn/plus
       [{:fn/timepoint [:time/first-entered-state :state/preauthorized]}
-       {:fn/period ["P6D"]}]}
-     {:fn/plus
-      [{:fn/timepoint [:time/booking-start]} {:fn/period ["P1D"]}]}
-     {:fn/timepoint [:time/booking-end]}]},
-   :actions
-   [{:name :action/calculate-full-refund}
-    {:name :action/stripe-refund-payment}
-    ;; Keep this action last in the list of actions for
-    ;; the transition
-    {:name :action/decline-booking}],
+       {:fn/period ["PT24H"]}]}
+     {:fn/timepoint [:time/booking-start]}]},
+   :actions [{:name :action/decline-booking}],
    :from :state/preauthorized,
    :to :state/expired}
-  {:name :transition/complete,
+  {:name :transition/expire-before-cancellation-window,
    :at
-   {:fn/plus
-    [{:fn/timepoint [:time/booking-end]} {:fn/period ["P2D"]}]},
-   :actions [{:name :action/stripe-create-payout}],
+   {:fn/ignore-if-past
+    [{:fn/minus
+      [{:fn/timepoint [:time/booking-start]} {:fn/period ["PT12H"]}]}]},
+   :actions [{:name :action/decline-booking}],
+   :from :state/preauthorized,
+   :to :state/expired}
+  {:name :transition/customer-cancel,
+   :actor :actor.role/customer,
+   :actions [{:name :action/cancel-booking}],
    :from :state/accepted,
+   :to :state/cancelled}
+  {:name :transition/provider-cancel,
+   :actor :actor.role/provider,
+   :actions [{:name :action/cancel-booking}],
+   :from :state/accepted,
+   :to :state/cancelled}
+  {:name :transition/cancel,
+   :actor :actor.role/operator,
+   :actions [{:name :action/cancel-booking}],
+   :from :state/accepted,
+   :to :state/cancelled}
+  {:name :transition/close-cancellation,
+   :at
+   {:fn/minus
+    [{:fn/timepoint [:time/booking-start]} {:fn/period ["PT12H"]}]},
+   :actions [],
+   :from :state/accepted,
+   :to :state/cancellation-closed}
+  {:name :transition/provider-cancel-after-window,
+   :actor :actor.role/provider,
+   :actions [{:name :action/cancel-booking}],
+   :from :state/cancellation-closed,
+   :to :state/cancelled}
+  {:name :transition/operator-cancel-after-window,
+   :actor :actor.role/operator,
+   :actions [{:name :action/cancel-booking}],
+   :from :state/cancellation-closed,
+   :to :state/cancelled}
+  {:name :transition/complete,
+   :at {:fn/timepoint [:time/booking-end]},
+   :actions [],
+   :from :state/cancellation-closed,
    :to :state/delivered}
   {:name :transition/operator-complete,
    :actor :actor.role/operator,
-   :actions [{:name :action/stripe-create-payout}],
-   :from :state/accepted,
+   :actions [],
+   :from :state/cancellation-closed,
    :to :state/delivered}
-  {:name :transition/cancel,
-   :actor :actor.role/operator,
-   :actions
-   [{:name :action/calculate-full-refund}
-    {:name :action/stripe-refund-payment}
-    ;; Keep this action last in the list of actions for
-    ;; the transition
-    {:name :action/cancel-booking}],
-   :from :state/accepted,
-   :to :state/cancelled}
   {:name :transition/review-1-by-provider,
    :actor :actor.role/provider,
    :actions [{:name :action/post-review-by-provider}],
@@ -161,7 +176,11 @@
    :to :state/reviewed}],
  :notifications
  [{:name :notification/booking-new-request,
-   :on :transition/confirm-payment,
+   :on :transition/request-payment,
+   :to :actor.role/provider,
+   :template :booking-new-request}
+  {:name :notification/booking-new-request-after-inquiry,
+   :on :transition/request-payment-after-inquiry,
    :to :actor.role/provider,
    :template :booking-new-request}
   {:name :notification/booking-accepted-request,
@@ -192,10 +211,26 @@
    :on :transition/expire,
    :to :actor.role/customer,
    :template :booking-expired-request}
-  {:name :notification/booking-money-paid,
-   :on :transition/complete,
+  {:name :notification/booking-expired-request-before-cancellation-window,
+   :on :transition/expire-before-cancellation-window,
+   :to :actor.role/customer,
+   :template :booking-expired-request}
+  {:name :notification/booking-request-withdrawn,
+   :on :transition/customer-withdraw-request,
    :to :actor.role/provider,
-   :template :booking-money-paid}
+   :template :booking-request-withdrawn}
+  {:name :notification/booking-cancelled-by-customer,
+   :on :transition/customer-cancel,
+   :to :actor.role/provider,
+   :template :booking-cancelled-by-customer}
+  {:name :notification/booking-cancelled-by-provider,
+   :on :transition/provider-cancel,
+   :to :actor.role/customer,
+   :template :booking-cancelled-by-provider}
+  {:name :notification/booking-cancelled-by-provider-after-window,
+   :on :transition/provider-cancel-after-window,
+   :to :actor.role/customer,
+   :template :booking-cancelled-by-provider}
   {:name :notification/review-period-start-provider,
    :on :transition/complete,
    :to :actor.role/provider,
@@ -204,10 +239,6 @@
    :on :transition/complete,
    :to :actor.role/customer,
    :template :booking-review-by-customer-wanted}
-  {:name :notification/booking-money-paid-operator-complete,
-   :on :transition/operator-complete,
-   :to :actor.role/provider,
-   :template :booking-money-paid}
   {:name :notification/review-period-start-provider-operator-complete,
    :on :transition/operator-complete,
    :to :actor.role/provider,

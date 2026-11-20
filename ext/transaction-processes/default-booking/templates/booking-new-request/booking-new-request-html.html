@@ -329,10 +329,10 @@
                             <tr>
                               <td>
                                 <td>
-                                  <p style="font-size:16px;line-height:1.4;margin:16px 0;color:#484848;margin-top:1px;font-weight:700">{{t "BookingNewRequest.EarningLabel" "You'll earn"}}</p>
+                                  <p style="font-size:16px;line-height:1.4;margin:16px 0;color:#484848;margin-top:1px;font-weight:700">{{t "BookingNewRequest.PaidOnTheDayLabel" "Paid to you on the day"}}</p>
                                 </td>
                                 <td style="text-align:right">
-                                  <p style="font-size:16px;line-height:1.4;margin:16px 0;color:#484848;margin-top:1px;font-weight:700">{{> format-money money=payout-total}}</p>
+                                  <p style="font-size:16px;line-height:1.4;margin:16px 0;color:#484848;margin-top:1px;font-weight:700">{{> format-money money=payin-total}}</p>
                                 </td>
                               </td>
                             </tr>
@@ -342,7 +342,7 @@
                     </tr>
                   </tbody>
                 </table>
-                <p style="font-size:16px;line-height:1.4;margin:16px 0;color:#484848;font-weight:700">{{t "BookingNewRequest.AcceptText" "You need to accept the request by {date,date,::jmmyyyyMMMd}. Otherwise the request will expire automatically and you won't get paid." date=delayed-transition.run-at}}</p>
+                <p style="font-size:16px;line-height:1.4;margin:16px 0;color:#484848;font-weight:700">{{t "BookingNewRequest.AcceptTextNoPayment" "Please accept or decline the request by {date,date,::jmmyyyyMMMd}. Otherwise it expires automatically and the seats are released." date=delayed-transition.run-at}}</p>
                 <p style="font-size:16px;line-height:1.4;margin:16px 0;color:#484848">{{t "BookingNewRequest.DeclineOptionText" "If the booked dates don't work for you, you can also choose to decline the request."}}</p>
                 <table style="padding:16px 0 0" align="center" border="0" cellPadding="0" cellSpacing="0" role="presentation" width="100%">
                   <tbody>
