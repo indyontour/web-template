@@ -17,3 +17,6 @@ yarn-error.log
 
 # beaway: local progress notes for Claude sessions
 PROGRESS-NOTES.md
+
+# beaway: personal test plan
+TEST-PLAN-booking.md
