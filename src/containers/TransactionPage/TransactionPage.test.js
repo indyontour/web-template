@@ -515,7 +515,8 @@ describe('TransactionPage', () => {
 
       expect(screen.queryAllByText('OrderBreakdown.baseUnitDay')).toHaveLength(expectedLength);
       expect(screen.queryAllByText('OrderBreakdown.subTotal')).toHaveLength(expectedLength);
-      expect(screen.queryAllByText('$10.00')).toHaveLength(expectedLength * 2);
+      // beaway: base, subtotal and the host's total (payin) are all $10.00
+      expect(screen.queryAllByText('$10.00')).toHaveLength(expectedLength * 3);
 
       // Order breakdown: refund?
       const expectedLengthReversal = isReversal ? 2 : 0;
@@ -532,14 +533,11 @@ describe('TransactionPage', () => {
       );
 
       // Order breakdown: total (with multiple translation keys)
-      const total = isReversal
-        ? 'OrderBreakdown.providerTotalRefunded'
-        : isReceived
-        ? 'OrderBreakdown.providerTotalReceived'
-        : 'OrderBreakdown.providerTotalDefault';
-      const expectedTotal = isReversal ? expectedLengthReversal : expectedLength;
-      expect(screen.queryAllByText(total)).toHaveLength(expectedTotal);
-      expect(screen.queryAllByText('$9.00')).toHaveLength(expectedTotal);
+      // beaway: no online payments, so the host sees what the traveler pays on the day
+      // (payin total), never a payout or a refund
+      const total = 'OrderBreakdown.providerTotalPayOnTheDay';
+      expect(screen.queryAllByText(total)).toHaveLength(expectedLength);
+      expect(screen.queryAllByText('$9.00')).toHaveLength(0);
 
       // A note about commission (customer should no see this)
       expect(screen.queryAllByText('OrderBreakdown.commissionFeeNote')).toHaveLength(
@@ -704,7 +702,8 @@ describe('TransactionPage', () => {
       expect(screen.queryAllByText('OrderBreakdown.refundProviderFee')).toHaveLength(0);
 
       // Order breakdown: total (with multiple translation keys)
-      const total = 'OrderBreakdown.total';
+      // beaway: the traveler pays the host on the day
+      const total = 'OrderBreakdown.totalPayOnTheDay';
       const expectedTotal = isReversal ? expectedLengthReversal : expectedLength;
       expect(screen.queryAllByText(total)).toHaveLength(expectedTotal);
 
@@ -867,14 +866,11 @@ describe('TransactionPage', () => {
       );
 
       // Order breakdown: total (with multiple translation keys)
-      const total = isReversal
-        ? 'OrderBreakdown.providerTotalRefunded'
-        : isReceived
-        ? 'OrderBreakdown.providerTotalReceived'
-        : 'OrderBreakdown.providerTotalDefault';
-      const expectedTotal = isReversal ? expectedLengthReversal : expectedLength;
-      expect(screen.queryAllByText(total)).toHaveLength(expectedTotal);
-      expect(screen.queryAllByText('$9.00')).toHaveLength(expectedTotal);
+      // beaway: no online payments, so the host sees what the traveler pays on the day
+      // (payin total), never a payout or a refund
+      const total = 'OrderBreakdown.providerTotalPayOnTheDay';
+      expect(screen.queryAllByText(total)).toHaveLength(expectedLength);
+      expect(screen.queryAllByText('$9.00')).toHaveLength(0);
 
       // A note about commission (customer should no see this)
       expect(screen.queryAllByText('OrderBreakdown.commissionFeeNote')).toHaveLength(
@@ -1039,7 +1035,8 @@ describe('TransactionPage', () => {
       expect(screen.queryAllByText('OrderBreakdown.refundProviderFee')).toHaveLength(0);
 
       // Order breakdown: total (with multiple translation keys)
-      const total = 'OrderBreakdown.total';
+      // beaway: the traveler pays the host on the day
+      const total = 'OrderBreakdown.totalPayOnTheDay';
       const expectedTotal = isReversal ? expectedLengthReversal : expectedLength;
       expect(screen.queryAllByText(total)).toHaveLength(expectedTotal);
 

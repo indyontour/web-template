@@ -2,7 +2,11 @@ import React from 'react';
 import { FormattedMessage, intlShape } from '../../util/reactIntl';
 import { formatMoney } from '../../util/currency';
 import { propTypes } from '../../util/types';
-import { resolveLatestProcessName, getProcess } from '../../transactions/transaction';
+import {
+  resolveLatestProcessName,
+  getProcess,
+  isStripeRelatedProcessAlias,
+} from '../../transactions/transaction';
 
 import css from './OrderBreakdown.module.css';
 
@@ -33,15 +37,26 @@ const LineItemTotalPrice = props => {
     providerTotalMessageId = 'OrderBreakdown.providerTotalRefunded';
   }
 
+  // beaway: without online payments, the traveler pays the host directly on the day,
+  // so both sides see the same total (what the traveler pays).
+  const isWithoutPayments = !isStripeRelatedProcessAlias(processName);
+  const customerTotalMessageId = isWithoutPayments
+    ? 'OrderBreakdown.totalPayOnTheDay'
+    : 'OrderBreakdown.total';
+  if (isProvider && isWithoutPayments) {
+    providerTotalMessageId = 'OrderBreakdown.providerTotalPayOnTheDay';
+  }
+
   const totalLabel = isProvider ? (
     <FormattedMessage id={providerTotalMessageId} />
   ) : (
-    <FormattedMessage id="OrderBreakdown.total" />
+    <FormattedMessage id={customerTotalMessageId} />
   );
 
-  const totalPrice = isProvider
-    ? transaction.attributes.payoutTotal
-    : transaction.attributes.payinTotal;
+  const totalPrice =
+    isProvider && !isWithoutPayments
+      ? transaction.attributes.payoutTotal
+      : transaction.attributes.payinTotal;
   const formattedTotalPrice = formatMoney(intl, totalPrice);
 
   return (

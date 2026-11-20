@@ -19,6 +19,7 @@ import {
 
 import CheckoutPageWithPayment from './CheckoutPageWithPayment';
 import CheckoutPageWithInquiryProcess from './CheckoutPageWithInquiryProcess';
+import CheckoutPageWithoutPayment from './CheckoutPageWithoutPayment';
 import checkoutPageReducer, { setInitialValues } from './CheckoutPage.duck';
 
 const { Money } = sdkTypes;
@@ -183,7 +184,8 @@ describe('CheckoutPage', () => {
     ).toBeInTheDocument();
   });
 
-  it('Check that booking has relevant info', () => {
+  // beaway: bookings have no online payments, so they use CheckoutPageWithoutPayment
+  it('Check that booking (without payment) has relevant info', () => {
     const listing = createListing(
       'listing1',
       { publicData: { transactionProcessAlias: 'default-booking/release-1', unitType: 'day' } },
@@ -201,11 +203,12 @@ describe('CheckoutPage', () => {
       title: 'CheckoutPage.default-booking.title',
       speculatedTransaction: createTransaction({
         id: 'tx1',
+        processName: 'default-booking',
         lineItems,
         total: new Money(2500, 'USD'),
       }),
     };
-    render(<CheckoutPageWithPayment {...props} />);
+    render(<CheckoutPageWithoutPayment {...props} />);
 
     const bookingTitle = 'CheckoutPage.default-booking.title';
     expect(screen.getByRole('heading', { name: bookingTitle })).toBeInTheDocument();
@@ -214,26 +217,19 @@ describe('CheckoutPage', () => {
 
     // These are rendered twice (mobile & desktop)
     expect(screen.getAllByText('OrderBreakdown.baseUnitQuantity')).toHaveLength(2);
-    expect(screen.queryAllByText('OrderBreakdown.shippingFee')).toHaveLength(0);
-    expect(screen.getAllByText('OrderBreakdown.total')).toHaveLength(2);
+    expect(screen.getAllByText('OrderBreakdown.totalPayOnTheDay')).toHaveLength(2);
 
-    const getTextbox = name => screen.getByRole('textbox', { name });
+    // No card payment form
+    expect(screen.queryByText('StripePaymentForm.paymentHeading')).not.toBeInTheDocument();
+    expect(screen.queryByText('StripePaymentForm.billingDetails')).not.toBeInTheDocument();
 
-    const paymentHeading = 'StripePaymentForm.paymentHeading';
-    expect(screen.getByRole('heading', { name: paymentHeading })).toBeInTheDocument();
-
-    const billingDetails = 'StripePaymentForm.billingDetails';
-    expect(screen.getByRole('heading', { name: billingDetails })).toBeInTheDocument();
-    expect(getTextbox('StripePaymentForm.billingDetailsNameLabel')).toBeInTheDocument();
-    expect(getTextbox('StripePaymentAddress.addressLine1Label')).toBeInTheDocument();
-    expect(getTextbox('StripePaymentAddress.addressLine2Label')).toBeInTheDocument();
-    expect(getTextbox('StripePaymentAddress.postalCodeLabel')).toBeInTheDocument();
-    expect(getTextbox('StripePaymentAddress.cityLabel')).toBeInTheDocument();
-    expect(getTextbox('StripePaymentAddress.stateLabel')).toBeInTheDocument();
-    expect(getTextbox('StripePaymentForm.messageLabel')).toBeInTheDocument();
-
+    // Optional message, "pay on the day" note and the request button
     expect(
-      screen.getByRole('button', { name: 'StripePaymentForm.submitPaymentInfo' })
+      screen.getByRole('textbox', { name: 'CheckoutPageWithoutPayment.messageLabel' })
+    ).toBeInTheDocument();
+    expect(screen.getByText('CheckoutPageWithoutPayment.payOnTheDayWithTotal')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'CheckoutPageWithoutPayment.submitButtonText' })
     ).toBeInTheDocument();
   });
 

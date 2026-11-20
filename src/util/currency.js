@@ -233,6 +233,20 @@ export const convertMoneyToNumber = value => {
 };
 
 /**
+ * beaway: display-only tweaks per currency (not used by price inputs).
+ * Thai baht is shown as "฿2,500" instead of "THB 2,500.00": the narrow symbol, and
+ * decimals only when the amount has satang.
+ *
+ * @param {String} currency ISO 4217 currency code
+ * @param {Number} amount amount in major units (e.g. baht)
+ * @returns {Object} Intl.NumberFormat options that override the defaults
+ */
+const displayOverridesForCurrency = (currency, amount) =>
+  currency === 'THB'
+    ? { currencyDisplay: 'narrowSymbol', minimumFractionDigits: Number.isInteger(amount) ? 0 : 2 }
+    : {};
+
+/**
  * Format the given money to a string
  *
  * @param {Object} intl
@@ -250,7 +264,10 @@ export const formatMoney = (intl, value) => {
   // If you have used currencies that are not listed in src/config/settingsCurrency.js,
   // you might want to use option { enforceSupportedCurrencies: false }
   const options = {};
-  const numberFormatOptions = getCurrencyFormatting(value.currency, options);
+  const numberFormatOptions = {
+    ...getCurrencyFormatting(value.currency, options),
+    ...displayOverridesForCurrency(value.currency, valueAsNumber),
+  };
 
   return intl.formatNumber(valueAsNumber, numberFormatOptions);
 };

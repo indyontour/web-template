@@ -29,6 +29,7 @@ import {
   isBookingProcess,
   isNegotiationProcess,
   isPurchaseProcess,
+  isStripeRelatedProcessAlias,
   resolveLatestProcessName,
 } from '../../transactions/transaction';
 
@@ -210,8 +211,13 @@ export const getDerivedRenderData = ({
 
   const currentAuthor = authorAvailable ? currentListing.author : null;
   const ensuredAuthor = ensureUser(currentAuthor);
+  // beaway: processes without Stripe actions (default-booking in beaway) don't need payout details
+  const isProcessWithoutPayments = !isStripeRelatedProcessAlias(
+    currentListing?.attributes?.publicData?.transactionProcessAlias
+  );
   const authorNeedsPayoutDetails =
-    ['booking', 'purchase'].includes(processType) || (isNegotiation && unitType === OFFER);
+    !isProcessWithoutPayments &&
+    (['booking', 'purchase'].includes(processType) || (isNegotiation && unitType === OFFER));
   const noPayoutDetailsSetWithOwnListing =
     isOwnListing && (authorNeedsPayoutDetails && !currentUser?.attributes?.stripeConnected);
 

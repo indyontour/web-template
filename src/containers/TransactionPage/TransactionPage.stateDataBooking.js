@@ -6,6 +6,30 @@ import {
 } from '../../transactions/transaction';
 
 /**
+ * beaway: ask "Are you sure?" before an action that can't be undone (withdraw, cancel).
+ * Returns the button props with onAction wrapped in a browser confirm dialog.
+ *
+ * @param {Object} buttonProps props from actionButtonProps()
+ * @param {string} confirmText question shown in the dialog
+ * @returns {Object} button props
+ */
+const withConfirmation = (buttonProps, confirmText) => {
+  if (!buttonProps?.onAction) {
+    return buttonProps;
+  }
+  const { onAction } = buttonProps;
+  return {
+    ...buttonProps,
+    onAction: () => {
+      const confirmed = typeof window === 'undefined' || window.confirm(confirmText);
+      if (confirmed) {
+        onAction();
+      }
+    },
+  };
+};
+
+/**
  * Get state data against booking process for TransactionPage's UI.
  * I.e. info about showing action buttons, current state etc.
  *
@@ -13,7 +37,8 @@ import {
  * @param {*} processInfo  details about process
  */
 export const getStateDataForBookingProcess = (txInfo, processInfo) => {
-  const { transaction, transactionRole, nextTransitions } = txInfo;
+  const { transaction, transactionRole, nextTransitions, intl } = txInfo;
+  const confirmText = id => (intl ? intl.formatMessage({ id }) : '');
   const isProviderBanned = transaction?.provider?.attributes?.banned;
   const isCustomerBanned = transaction?.provider?.attributes?.banned;
   const _ = CONDITIONAL_RESOLVER_WILDCARD;
@@ -42,7 +67,19 @@ export const getStateDataForBookingProcess = (txInfo, processInfo) => {
       return { processName, processState, showDetailCardHeadings: true };
     })
     .cond([states.PREAUTHORIZED, CUSTOMER], () => {
-      return { processName, processState, showDetailCardHeadings: true, showExtraInfo: true };
+      // beaway: the traveler can withdraw the request while waiting for the host
+      const secondary = withConfirmation(
+        actionButtonProps(transitions.CUSTOMER_WITHDRAW_REQUEST, CUSTOMER),
+        confirmText('TransactionPage.default-booking.customer.withdrawRequest.confirm')
+      );
+      return {
+        processName,
+        processState,
+        showDetailCardHeadings: true,
+        showExtraInfo: true,
+        showActionButtons: true,
+        secondaryButtonProps: secondary,
+      };
     })
     .cond([states.PREAUTHORIZED, PROVIDER], () => {
       const primary = isCustomerBanned ? null : actionButtonProps(transitions.ACCEPT, PROVIDER);
@@ -53,6 +90,51 @@ export const getStateDataForBookingProcess = (txInfo, processInfo) => {
         showDetailCardHeadings: true,
         showActionButtons: true,
         primaryButtonProps: primary,
+        secondaryButtonProps: secondary,
+      };
+    })
+    .cond([states.ACCEPTED, CUSTOMER], () => {
+      // beaway: the traveler can cancel an accepted booking until 12 hours before departure
+      const secondary = withConfirmation(
+        actionButtonProps(transitions.CUSTOMER_CANCEL, CUSTOMER),
+        confirmText('TransactionPage.default-booking.customer.cancelBooking.confirm')
+      );
+      return {
+        processName,
+        processState,
+        showDetailCardHeadings: true,
+        showExtraInfo: true,
+        showActionButtons: true,
+        secondaryButtonProps: secondary,
+      };
+    })
+    .cond([states.ACCEPTED, PROVIDER], () => {
+      // beaway: the host can cancel an accepted booking at any time before the trip completes
+      const secondary = withConfirmation(
+        actionButtonProps(transitions.PROVIDER_CANCEL, PROVIDER),
+        confirmText('TransactionPage.default-booking.provider.cancelBooking.confirm')
+      );
+      return {
+        processName,
+        processState,
+        showDetailCardHeadings: true,
+        showActionButtons: true,
+        secondaryButtonProps: secondary,
+      };
+    })
+    .cond([states.CANCELLATION_CLOSED, CUSTOMER], () => {
+      return { processName, processState, showDetailCardHeadings: true, showExtraInfo: true };
+    })
+    .cond([states.CANCELLATION_CLOSED, PROVIDER], () => {
+      const secondary = withConfirmation(
+        actionButtonProps(transitions.PROVIDER_CANCEL_AFTER_WINDOW, PROVIDER),
+        confirmText('TransactionPage.default-booking.provider.cancelBooking.confirm')
+      );
+      return {
+        processName,
+        processState,
+        showDetailCardHeadings: true,
+        showActionButtons: true,
         secondaryButtonProps: secondary,
       };
     })

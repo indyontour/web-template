@@ -118,7 +118,7 @@ const prefixPriceVariantProperties = priceVariant => {
  * @param {string} [checkoutPaymentMethod]
  * @returns orderParams.
  */
-const getOrderParams = (
+export const getOrderParams = (
   pageData,
   shippingDetails,
   optionalPaymentParams,

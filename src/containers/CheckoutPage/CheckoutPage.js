@@ -13,6 +13,7 @@ import {
   INQUIRY_PROCESS_NAME,
   resolveLatestProcessName,
   isNegotiationProcess,
+  isStripeRelatedProcessAlias,
 } from '../../transactions/transaction';
 import { requireListingImage } from '../../util/configHelpers';
 
@@ -45,6 +46,9 @@ import {
 import CheckoutPageWithPayment, {
   loadInitialDataForStripePayments,
 } from './CheckoutPageWithPayment';
+import CheckoutPageWithoutPayment, {
+  loadInitialDataWithoutPayment,
+} from './CheckoutPageWithoutPayment';
 import CheckoutPageWithInquiryProcess from './CheckoutPageWithInquiryProcess';
 import CheckoutPageRedirectReturn from './CheckoutPageRedirectReturn/CheckoutPageRedirectReturn';
 import CheckoutPageAccessWrapper from './CheckoutPageAccessWrapper';
@@ -65,6 +69,17 @@ const getProcessName = pageData => {
     ? listing?.attributes?.publicData?.transactionProcessAlias?.split('/')[0]
     : null;
   return resolveLatestProcessName(processName);
+};
+
+// beaway: processes without Stripe actions (e.g. default-booking in beaway) use
+// CheckoutPageWithoutPayment instead of the card payment checkout.
+const isProcessWithoutPayment = pageData => {
+  const processName = getProcessName(pageData);
+  if (!processName || processName === INQUIRY_PROCESS_NAME) {
+    return false;
+  }
+  // The helper only looks at the process name part of the alias
+  return !isStripeRelatedProcessAlias(processName);
 };
 
 const CheckoutPageComponent = props => {
@@ -88,6 +103,7 @@ const CheckoutPageComponent = props => {
   const routeConfiguration = useRouteConfiguration();
   const intl = useIntl();
   const isInquiryProcess = processName === INQUIRY_PROCESS_NAME;
+  const isWithoutPayment = isProcessWithoutPayment(pageData);
   const isReturnAfterRedirect = mode === CHECKOUT_MODE_RETURN_AFTER_REDIRECT;
   const hasSpeculatedTransactionForRender =
     !speculateTransactionInProgress || speculatedTransaction?.id;
@@ -129,6 +145,24 @@ const CheckoutPageComponent = props => {
       onSubmitCallback={onSubmitCallback}
       showListingImage={showListingImage}
       transactionFieldConfigs={transactionFieldConfigs}
+      {...props}
+    />
+  ) : processName && isWithoutPayment && hasSpeculatedTransactionForRender ? (
+    <CheckoutPageWithoutPayment
+      config={config}
+      routeConfiguration={routeConfiguration}
+      intl={intl}
+      history={history}
+      processName={processName}
+      sessionStorageKey={STORAGE_KEY}
+      pageData={pageData}
+      setPageData={setPageData}
+      listingTitle={listingTitle}
+      title={title}
+      onSubmitCallback={onSubmitCallback}
+      showListingImage={showListingImage}
+      transactionFieldConfigs={transactionFieldConfigs}
+      showTransactionFields={showTransactionFields}
       {...props}
     />
   ) : isReturnAfterRedirect ? (
@@ -248,7 +282,14 @@ const CheckoutPage = props => {
     if (isUserAuthorized(currentUser) && !isReturnAfterRedirect) {
       // This is for processes using payments with Stripe integration
       // Inquiry process has no payment transitions; skip speculate/Stripe customer fetch.
-      if (getProcessName(data) !== INQUIRY_PROCESS_NAME) {
+      if (isProcessWithoutPayment(data)) {
+        // beaway: no Stripe customer needed, only the price breakdown
+        loadInitialDataWithoutPayment({
+          pageData: data || {},
+          fetchSpeculatedTransaction,
+          config,
+        });
+      } else if (getProcessName(data) !== INQUIRY_PROCESS_NAME) {
         // Fetch StripeCustomer and speculateTransition for transactions that include Stripe payments
         loadInitialDataForStripePayments({
           pageData: data || {},

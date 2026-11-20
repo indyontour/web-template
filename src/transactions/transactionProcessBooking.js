@@ -3,8 +3,6 @@
  *   - default-booking
  */
 
-import { PAYMENT_METHOD_CARD, stripePaymentMethodInfo } from './paymentMethods';
-
 /**
  * Transitions
  *
@@ -17,8 +15,8 @@ import { PAYMENT_METHOD_CARD, stripePaymentMethodInfo } from './paymentMethods';
 export const transitions = {
   // When a customer makes a booking to a listing, a transaction is
   // created with the initial request-payment transition.
-  // At this transition a PaymentIntent is created by Marketplace API.
-  // After this transition, the actual payment must be made on client-side directly to Stripe.
+  // beaway: there's no online payment. Despite the name, this transition only sends the
+  // booking request to the provider (seats are held, line items are set). Nothing is charged.
   REQUEST_PAYMENT: 'transition/request-payment',
 
   // A customer can also initiate a transaction with an inquiry, and
@@ -26,19 +24,13 @@ export const transitions = {
   INQUIRE: 'transition/inquire',
   REQUEST_PAYMENT_AFTER_INQUIRY: 'transition/request-payment-after-inquiry',
 
-  // Stripe SDK might need to ask 3D security from customer, in a separate front-end step.
-  // Therefore we need to make another transition to Marketplace API,
-  // to tell that the payment is confirmed.
-  CONFIRM_PAYMENT: 'transition/confirm-payment',
-
-  // If the payment is not confirmed in the time limit set in transaction process (by default 15min)
-  // the transaction will expire automatically.
-  EXPIRE_PAYMENT: 'transition/expire-payment',
-
   // When the provider accepts or declines a transaction from the
   // SalePage, it is transitioned with the accept or decline transition.
   ACCEPT: 'transition/accept',
   DECLINE: 'transition/decline',
+  // beaway: the customer can withdraw a pending request before the provider answers.
+  // The held seats are released.
+  CUSTOMER_WITHDRAW_REQUEST: 'transition/customer-withdraw-request',
 
   // The operator can accept or decline the offer on behalf of the provider
   OPERATOR_ACCEPT: 'transition/operator-accept',
@@ -46,9 +38,20 @@ export const transitions = {
 
   // The backend automatically expire the transaction.
   EXPIRE: 'transition/expire',
+  // beaway: a request made more than 12 hours before departure expires 12 hours before
+  // departure (if still unanswered). Later requests use EXPIRE, which waits until departure.
+  EXPIRE_BEFORE_CANCELLATION_WINDOW: 'transition/expire-before-cancellation-window',
 
   // Admin can also cancel the transition.
   CANCEL: 'transition/cancel',
+  // beaway: the customer can cancel an accepted booking until 12 hours before departure,
+  // the provider can cancel at any time before the trip completes.
+  CUSTOMER_CANCEL: 'transition/customer-cancel',
+  PROVIDER_CANCEL: 'transition/provider-cancel',
+  // beaway: 12 hours before departure the booking moves to cancellation-closed automatically.
+  CLOSE_CANCELLATION: 'transition/close-cancellation',
+  PROVIDER_CANCEL_AFTER_WINDOW: 'transition/provider-cancel-after-window',
+  OPERATOR_CANCEL_AFTER_WINDOW: 'transition/operator-cancel-after-window',
 
   // The backend will mark the transaction completed.
   COMPLETE: 'transition/complete',
@@ -78,11 +81,15 @@ export const transitions = {
 export const states = {
   INITIAL: 'initial',
   INQUIRY: 'inquiry',
+  // beaway: these two states don't exist in the no-payment process. They're kept only so that
+  // shared template checks like `state === states.PENDING_PAYMENT` keep evaluating to false.
   PENDING_PAYMENT: 'pending-payment',
   PAYMENT_EXPIRED: 'payment-expired',
   PREAUTHORIZED: 'preauthorized',
   DECLINED: 'declined',
+  WITHDRAWN: 'withdrawn',
   ACCEPTED: 'accepted',
+  CANCELLATION_CLOSED: 'cancellation-closed',
   EXPIRED: 'expired',
   CANCELED: 'canceled',
   DELIVERED: 'delivered',
@@ -114,38 +121,43 @@ export const graph = {
     [states.INITIAL]: {
       on: {
         [transitions.INQUIRE]: states.INQUIRY,
-        [transitions.REQUEST_PAYMENT]: states.PENDING_PAYMENT,
+        // beaway: no payment step, the request goes straight to the provider
+        [transitions.REQUEST_PAYMENT]: states.PREAUTHORIZED,
       },
     },
     [states.INQUIRY]: {
       on: {
-        [transitions.REQUEST_PAYMENT_AFTER_INQUIRY]: states.PENDING_PAYMENT,
+        [transitions.REQUEST_PAYMENT_AFTER_INQUIRY]: states.PREAUTHORIZED,
       },
     },
 
-    [states.PENDING_PAYMENT]: {
-      on: {
-        [transitions.EXPIRE_PAYMENT]: states.PAYMENT_EXPIRED,
-        [transitions.CONFIRM_PAYMENT]: states.PREAUTHORIZED,
-      },
-    },
-
-    [states.PAYMENT_EXPIRED]: {},
     [states.PREAUTHORIZED]: {
       on: {
         [transitions.DECLINE]: states.DECLINED,
         [transitions.OPERATOR_DECLINE]: states.DECLINED,
+        [transitions.CUSTOMER_WITHDRAW_REQUEST]: states.WITHDRAWN,
         [transitions.EXPIRE]: states.EXPIRED,
+        [transitions.EXPIRE_BEFORE_CANCELLATION_WINDOW]: states.EXPIRED,
         [transitions.ACCEPT]: states.ACCEPTED,
         [transitions.OPERATOR_ACCEPT]: states.ACCEPTED,
       },
     },
 
     [states.DECLINED]: {},
+    [states.WITHDRAWN]: {},
     [states.EXPIRED]: {},
     [states.ACCEPTED]: {
       on: {
         [transitions.CANCEL]: states.CANCELED,
+        [transitions.CUSTOMER_CANCEL]: states.CANCELED,
+        [transitions.PROVIDER_CANCEL]: states.CANCELED,
+        [transitions.CLOSE_CANCELLATION]: states.CANCELLATION_CLOSED,
+      },
+    },
+    [states.CANCELLATION_CLOSED]: {
+      on: {
+        [transitions.PROVIDER_CANCEL_AFTER_WINDOW]: states.CANCELED,
+        [transitions.OPERATOR_CANCEL_AFTER_WINDOW]: states.CANCELED,
         [transitions.COMPLETE]: states.DELIVERED,
         [transitions.OPERATOR_COMPLETE]: states.DELIVERED,
       },
@@ -181,15 +193,23 @@ export const graph = {
 // The first transition and most of the expiration transitions made by system are not relevant
 export const isRelevantPastTransition = transition => {
   return [
+    // beaway: the request itself is shown, since there's no confirm-payment step after it
+    transitions.REQUEST_PAYMENT,
+    transitions.REQUEST_PAYMENT_AFTER_INQUIRY,
     transitions.ACCEPT,
     transitions.OPERATOR_ACCEPT,
     transitions.CANCEL,
+    transitions.CUSTOMER_CANCEL,
+    transitions.PROVIDER_CANCEL,
+    transitions.PROVIDER_CANCEL_AFTER_WINDOW,
+    transitions.OPERATOR_CANCEL_AFTER_WINDOW,
     transitions.COMPLETE,
     transitions.OPERATOR_COMPLETE,
-    transitions.CONFIRM_PAYMENT,
     transitions.DECLINE,
     transitions.OPERATOR_DECLINE,
+    transitions.CUSTOMER_WITHDRAW_REQUEST,
     transitions.EXPIRE,
+    transitions.EXPIRE_BEFORE_CANCELLATION_WINDOW,
     transitions.REVIEW_1_BY_CUSTOMER,
     transitions.REVIEW_1_BY_PROVIDER,
     transitions.REVIEW_2_BY_CUSTOMER,
@@ -236,45 +256,42 @@ export const isPrivileged = transition => {
  *
  * Defaults come from paymentMethods.js via stripePaymentMethodInfo; override only if needed.
  */
-export const supportedPayments = {
-  stripe: {
-    ...stripePaymentMethodInfo(PAYMENT_METHOD_CARD),
-  },
-};
+// beaway: no online payments. An empty object marks this process as not Stripe-related:
+// checkout shows no card form, hosts aren't asked for payout details,
+// and any currency with known subunits (e.g. THB) is allowed.
+export const supportedPayments = {};
+
+/**
+ * beaway: the transition that sends the booking request (no payment involved).
+ *
+ * @param {string} [state='initial'] - current transaction state (from process.states)
+ * @returns {string} request-payment-after-inquiry when continuing an inquiry, else request-payment
+ */
+export const getRequestTransition = (state = states.INITIAL) =>
+  state === states.INQUIRY
+    ? transitions.REQUEST_PAYMENT_AFTER_INQUIRY
+    : transitions.REQUEST_PAYMENT;
 
 /**
  * Resolve checkout transitions for a payment method and transaction state.
+ * beaway: this process has no supported payments, so this always throws.
+ * Checkout uses getRequestTransition instead (CheckoutPageWithoutPayment).
  *
  * @param {Object} params
  * @param {string} params.paymentProcessor - e.g. 'stripe'
  * @param {string} params.paymentMethod - e.g. 'card'
- * @param {string} [params.state='initial'] - current transaction state (from process.states)
  * @param {string} [params.unsupportedPaymentErrorMessage] - shared error message from transaction.js wrapper
- * @returns {{ requestPaymentTransition: string, confirmPaymentTransition: string }}
- * @throws {Error} when paymentProcessor/paymentMethod is not in supportedPayments
+ * @throws {Error} always, because supportedPayments is empty
  */
 export const getCheckoutPaymentTransitions = ({
   paymentProcessor,
   paymentMethod,
-  state = 'initial',
   unsupportedPaymentErrorMessage,
 }) => {
-  const paymentConfig = supportedPayments[paymentProcessor]?.[paymentMethod];
-  if (!paymentConfig) {
-    const errorMessage =
-      unsupportedPaymentErrorMessage ||
-      `Unsupported payment: processor=${paymentProcessor}, method=${paymentMethod}`;
-    throw new Error(errorMessage);
-  }
-
-  const isInquiry = state === states.INQUIRY;
-
-  return {
-    requestPaymentTransition: isInquiry
-      ? transitions.REQUEST_PAYMENT_AFTER_INQUIRY
-      : transitions.REQUEST_PAYMENT,
-    confirmPaymentTransition: transitions.CONFIRM_PAYMENT,
-  };
+  throw new Error(
+    unsupportedPaymentErrorMessage ||
+      `Unsupported payment: processor=${paymentProcessor}, method=${paymentMethod}`
+  );
 };
 
 // Check when transaction is completed (booking over)
@@ -293,27 +310,10 @@ export const isCompleted = transition => {
   return txCompletedTransitions.includes(transition);
 };
 
-/**
- * Check if payment has expired (PAYMENT_EXPIRED state).
- * Payment expires automatically from PENDING_PAYMENT via EXPIRE_PAYMENT transition.
- *
- * @param {Object} tx transaction entity
- * @returns {boolean}
- */
-export const hasPaymentExpired = tx => {
-  return tx?.attributes?.lastTransition === transitions.EXPIRE_PAYMENT;
-};
+// beaway: there's no payment step, so payment can't expire.
+export const hasPaymentExpired = () => false;
 
-// Check when transaction is refunded (booking did not happen)
-// In these transitions action/stripe-refund-payment is called
-export const isRefunded = transition => {
-  const txRefundedTransitions = [
-    transitions.EXPIRE_PAYMENT,
-    transitions.EXPIRE,
-    transitions.CANCEL,
-    transitions.DECLINE,
-  ];
-  return txRefundedTransitions.includes(transition);
-};
+// beaway: nothing is ever charged, so nothing is refunded.
+export const isRefunded = () => false;
 
 export const statesNeedingProviderAttention = [states.PREAUTHORIZED];

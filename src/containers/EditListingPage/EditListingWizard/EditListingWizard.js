@@ -37,7 +37,11 @@ import {
 } from '../../../util/fieldHelpers';
 import { ensureCurrentUser, ensureListing } from '../../../util/data';
 import { getDisplayAccountType } from '../../../util/stripeConnect';
-import { INQUIRY_PROCESS_NAME, resolveLatestProcessName } from '../../../transactions/transaction';
+import {
+  INQUIRY_PROCESS_NAME,
+  isStripeRelatedProcessAlias,
+  resolveLatestProcessName,
+} from '../../../transactions/transaction';
 
 // Import shared components
 import {
@@ -472,8 +476,11 @@ class EditListingWizard extends Component {
       fileUploadsDisabled,
       allFilesUploadedAndVerified,
     } = this.props;
-    const processName = listing?.attributes?.publicData?.transactionProcessAlias.split('/')[0];
+    const processAlias = listing?.attributes?.publicData?.transactionProcessAlias;
+    const processName = processAlias.split('/')[0];
     const isInquiryProcess = processName === INQUIRY_PROCESS_NAME;
+    // beaway: processes without Stripe actions (default-booking in beaway) never need payout details
+    const isProcessWithoutPayments = !isStripeRelatedProcessAlias(processAlias);
 
     const listingTypeConfig = getListingTypeConfig(listing, this.state.selectedListingType, config);
     // Through hosted configs (listingTypeConfig.defaultListingFields?.payoutDetails),
@@ -498,6 +505,7 @@ class EditListingWizard extends Component {
 
     if (
       isInquiryProcess ||
+      isProcessWithoutPayments ||
       !isPayoutDetailsRequired ||
       (stripeConnected && !stripeRequirementsMissing)
     ) {

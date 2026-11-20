@@ -30,6 +30,14 @@ export const getStateDataForBookingProcess = (txInfo, processInfo) => {
     .cond([states.DECLINED, _], () => {
       return { processName, processState, isFinal: true };
     })
+    // beaway: the traveler withdrew a pending request
+    .cond([states.WITHDRAWN, _], () => {
+      return { processName, processState, isFinal: true };
+    })
+    // beaway: accepted booking less than 12 hours before departure (traveler can't cancel anymore)
+    .cond([states.CANCELLATION_CLOSED, _], () => {
+      return { processName, processState, actionNeeded: true };
+    })
     .cond([states.EXPIRED, _], () => {
       return { processName, processState, isFinal: true };
     })

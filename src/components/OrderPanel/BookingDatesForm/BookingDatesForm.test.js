@@ -84,7 +84,8 @@ describe('EstimatedCustomerBreakdownMaybe', () => {
     const baseUnitNightInfo = within(baseUnitNight.parentNode.parentNode);
     expect(baseUnitNightInfo.getByText('$21.98')).toBeInTheDocument();
 
-    const total = screen.getByText('OrderBreakdown.total');
+    // beaway: bookings have no online payments, so the total is paid to the host on the day
+    const total = screen.getByText('OrderBreakdown.totalPayOnTheDay');
     expect(total).toBeInTheDocument();
     const totalPayIn = within(total.parentNode.parentNode);
     expect(totalPayIn.getByText('$21.98')).toBeInTheDocument();

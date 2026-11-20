@@ -246,5 +246,24 @@ describe('currency utils', () => {
     // No test for that actual formatting for now. It depends on the
     // locale, and it doesn't really make sense to test the fake intl
     // implementation in the tests.
+
+    // beaway: Thai baht uses the narrow symbol and drops decimals for whole baht
+    it('formats THB as ฿ without decimals for whole baht', () => {
+      const intl = { formatNumber: (value, options) => ({ value, options }) };
+      const whole = formatMoney(intl, new Money(750000, 'THB'));
+      expect(whole.value).toEqual(7500);
+      expect(whole.options.currencyDisplay).toEqual('narrowSymbol');
+      expect(whole.options.minimumFractionDigits).toEqual(0);
+
+      const withSatang = formatMoney(intl, new Money(250050, 'THB'));
+      expect(withSatang.options.minimumFractionDigits).toEqual(2);
+    });
+
+    it('keeps the default format for other currencies', () => {
+      const intl = { formatNumber: (value, options) => ({ value, options }) };
+      const usd = formatMoney(intl, new Money(1000, 'USD'));
+      expect(usd.options.currencyDisplay).toEqual('symbol');
+      expect(usd.options.minimumFractionDigits).toEqual(2);
+    });
   });
 });
