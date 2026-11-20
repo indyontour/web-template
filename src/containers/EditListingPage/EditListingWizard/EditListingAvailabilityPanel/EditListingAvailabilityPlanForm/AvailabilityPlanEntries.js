@@ -386,6 +386,7 @@ const SeatsWithTimeRangeHidden = props => {
  * @param {string} props.dayOfWeek - the shorthand for the day of week. E.g. 'Mon'.
  * @param {Boolean} props.useFullDays - enforce full days (used with 'day' and 'night' unit types).
  * @param {Boolean} props.useMultipleSeats - true if availabilityType is 'multipleSeats'.
+ * @param {number} [props.defaultSeats] - seats for a newly added day (beaway: the trip's seats)
  * @param {String} props.unitType - 'hour', 'day', 'night', 'fixed'.
  * @param {Object} props.values - form values for the availability plan entries.
  * @param {*} props.formApi - React Final Form api ('form').
@@ -398,6 +399,7 @@ const AvailabilityPlanEntries = props => {
     useFullDays,
     useIncrementalBoundaries,
     useMultipleSeats,
+    defaultSeats = 1,
     unitType,
     values,
     formApi,
@@ -434,7 +436,7 @@ const AvailabilityPlanEntries = props => {
             // 'day' and 'night' units use full days
             if (useFullDays) {
               if (isChecked) {
-                const seats = useMultipleSeats ? { seats: 1 } : { seats: 1 };
+                const seats = useMultipleSeats ? { seats: defaultSeats } : { seats: 1 };
                 formApi.mutators.push(dayOfWeek, {
                   startTime: '00:00',
                   endTime: '24:00',
@@ -446,7 +448,7 @@ const AvailabilityPlanEntries = props => {
             } else {
               const shouldAddEntry = isChecked && !hasEntries;
               if (shouldAddEntry) {
-                const seats = useMultipleSeats ? { seats: 1 } : { seats: 1 };
+                const seats = useMultipleSeats ? { seats: defaultSeats } : { seats: 1 };
                 // The 'hour' and 'fixed' units are not initialized with any value,
                 // because user needs to pick them themselves.
                 formApi.mutators.push(dayOfWeek, { startTime: null, endTime: null, ...seats });

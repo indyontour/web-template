@@ -220,6 +220,44 @@ const setNoAvailabilityForUnbookableListings = processAlias => {
 };
 
 /**
+ * beaway: keep the bookable seats in the weekly schedule (Availability tab) equal to the
+ * "Seats available" listing field (publicData.seatsavailable), so travelers can book as many
+ * seats as the trip card shows. Only for booking listings that already have a weekly schedule.
+ * Date exceptions keep their own seat counts.
+ *
+ * @param {Object} listing current listing (own listing, includes availabilityPlan)
+ * @param {*} seatsAvailable new "Seats available" value
+ * @param {string} processAlias selected for this listing
+ * @returns {Object} { availabilityPlan } with updated seats, or {}
+ */
+export const syncPlanSeatsWithSeatsAvailable = (listing, seatsAvailable, processAlias) => {
+  const plan = listing?.attributes?.availabilityPlan;
+  const entries = plan?.entries || [];
+  const seats =
+    typeof seatsAvailable === 'number'
+      ? seatsAvailable
+      : typeof seatsAvailable === 'string' && /^\d+$/.test(seatsAvailable.trim())
+      ? Number(seatsAvailable.trim())
+      : null;
+  const shouldSync =
+    isBookingProcessAlias(processAlias) &&
+    Number.isInteger(seats) &&
+    seats > 0 &&
+    entries.length > 0 &&
+    entries.some(e => e.seats !== seats);
+
+  return shouldSync
+    ? {
+        availabilityPlan: {
+          type: plan.type,
+          timezone: plan.timezone,
+          entries: entries.map(e => ({ ...e, seats })),
+        },
+      }
+    : {};
+};
+
+/**
  * Get initialValues for the form. This function includes
  * title, description, listingType, transactionProcessAlias, unitType,
  * and those publicData & privateData fields that are configured through
@@ -428,6 +466,11 @@ const EditListingDetailsPanel = props => {
               },
               privateData: privateListingFields,
               ...setNoAvailabilityForUnbookableListings(transactionProcessAlias),
+              ...syncPlanSeatsWithSeatsAvailable(
+                listing,
+                publicListingFields.seatsavailable,
+                transactionProcessAlias
+              ),
             };
 
             onSubmit(updateValues);

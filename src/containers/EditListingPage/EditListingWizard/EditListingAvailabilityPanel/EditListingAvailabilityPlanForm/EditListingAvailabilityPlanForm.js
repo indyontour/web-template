@@ -53,6 +53,7 @@ const submit = (onSubmit, weekdays) => values => {
  * @param {Array<Weekday>} props.weekdays
  * @param {boolean} props.useFullDays
  * @param {boolean} props.useMultipleSeats
+ * @param {number} [props.defaultSeats] seats for a newly added day (beaway)
  * @param {'hour'|'day'|'night'|'fixed'} props.unitType
  * @param {boolean} props.fetchErrors
  * @param {Object|null} props.fetchErrors.updateListingError
@@ -81,6 +82,7 @@ const EditListingAvailabilityPlanForm = props => {
           weekdays,
           useFullDays,
           useMultipleSeats,
+          defaultSeats,
           unitType,
           fetchErrors,
           values,
@@ -129,6 +131,7 @@ const EditListingAvailabilityPlanForm = props => {
                     useFullDays={useFullDays}
                     useIncrementalBoundaries={unitType === FIXED}
                     useMultipleSeats={useMultipleSeats}
+                    defaultSeats={defaultSeats}
                     unitType={unitType}
                     key={w}
                     values={values}

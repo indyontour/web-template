@@ -192,6 +192,10 @@ const EditListingAvailabilityPanel = props => {
 
   const useFullDays = isFullDay(unitType);
   const useMultipleSeats = listingTypeConfig?.availabilityType === AVAILABILITY_MULTIPLE_SEATS;
+  // beaway: new weekdays start with the trip's "Seats available" instead of 1
+  const seatsAvailable = Number(listingAttributes?.publicData?.seatsavailable);
+  const defaultSeats =
+    useMultipleSeats && Number.isInteger(seatsAvailable) && seatsAvailable > 0 ? seatsAvailable : 1;
 
   const hasAvailabilityPlan = !!listingAttributes?.availabilityPlan;
   const isPublished = listing?.id && listingAttributes?.state !== LISTING_STATE_DRAFT;
@@ -378,6 +382,7 @@ const EditListingAvailabilityPanel = props => {
             fetchErrors={errors}
             useFullDays={useFullDays}
             useMultipleSeats={useMultipleSeats}
+            defaultSeats={defaultSeats}
             unitType={unitType}
           />
         </Modal>
