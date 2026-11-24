@@ -108,3 +108,14 @@
     margin: 16px 0 0 0;
   }
 }
+
+/* beaway: "3 seats left" right under the Number of seats picker */
+.seatsLeft {
+  composes: textSmall from global;
+  color: var(--colorGrey700);
+  margin: 0 24px 12px 24px;
+
+  @media (--viewportMedium) {
+    margin: -16px 0 16px 0;
+  }
+}

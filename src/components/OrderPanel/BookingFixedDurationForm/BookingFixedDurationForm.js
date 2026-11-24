@@ -55,6 +55,30 @@ const handleFetchLineItems = props => formValues => {
   }
 };
 
+/**
+ * beaway: "3 seats left" under the Number of seats picker. The number is the seats still free for
+ * the chosen date and start time, from the time slots the form already loaded (requests waiting
+ * for the host already hold their seats). Shows nothing until a date and start time are picked.
+ *
+ * @component
+ * @param {Object} props
+ * @param {number} [props.seatsLeft] - free seats for the chosen departure
+ * @param {boolean} props.hasStartTime - whether a date and start time are picked
+ * @param {string} [props.className] - class for the paragraph
+ * @returns {JSX.Element|null}
+ */
+export const SeatsLeftMaybe = props => {
+  const { seatsLeft, hasStartTime, className } = props;
+  if (!hasStartTime || !Number.isInteger(seatsLeft) || seatsLeft < 1) {
+    return null;
+  }
+  return (
+    <p className={className} aria-live="polite">
+      <FormattedMessage id="BookingFixedDurationForm.seatsLeft" values={{ count: seatsLeft }} />
+    </p>
+  );
+};
+
 const onPriceVariantChange = props => value => {
   const { form: formApi, seatsEnabled } = props;
 
@@ -264,6 +288,14 @@ export const BookingFixedDurationForm = props => {
                   </option>
                 ))}
               </FieldSelect>
+            ) : null}
+            {seatsEnabled ? (
+              <SeatsLeftMaybe
+                className={css.seatsLeft}
+                // The picker offers 1 up to the free seats, so the last option is the free seats
+                seatsLeft={seatsOptions[seatsOptions.length - 1]}
+                hasStartTime={!!startTime}
+              />
             ) : null}
 
             {showEstimatedBreakdown ? (

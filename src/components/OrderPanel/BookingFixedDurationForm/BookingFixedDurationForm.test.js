@@ -7,6 +7,8 @@ import { types as sdkTypes } from '../../../util/sdkLoader';
 import { renderWithProviders as render, testingLibrary } from '../../../util/testHelpers';
 
 import EstimatedCustomerBreakdownMaybe from '../EstimatedCustomerBreakdownMaybe';
+import enMessages from '../../../translations/en.json';
+import { SeatsLeftMaybe } from './BookingFixedDurationForm';
 
 const { Money } = sdkTypes;
 const { screen, within } = testingLibrary;
@@ -74,5 +76,31 @@ describe('EstimatedBreakdownMaybe', () => {
     expect(total).toBeInTheDocument();
     const totalPayIn = within(total.parentNode.parentNode);
     expect(totalPayIn.getByText('$21.98')).toBeInTheDocument();
+  });
+});
+
+describe('SeatsLeftMaybe (beaway)', () => {
+  const messages = {
+    'BookingFixedDurationForm.seatsLeft': enMessages['BookingFixedDurationForm.seatsLeft'],
+  };
+
+  it('shows "3 seats left" for the chosen departure', () => {
+    render(<SeatsLeftMaybe seatsLeft={3} hasStartTime />, { messages });
+    expect(screen.getByText('3 seats left')).toBeInTheDocument();
+  });
+
+  it('uses the singular for one seat', () => {
+    render(<SeatsLeftMaybe seatsLeft={1} hasStartTime />, { messages });
+    expect(screen.getByText('1 seat left')).toBeInTheDocument();
+  });
+
+  it('shows nothing before a date and start time are picked', () => {
+    const tree = render(<SeatsLeftMaybe seatsLeft={3} hasStartTime={false} />, { messages });
+    expect(tree.asFragment().firstChild).toBeFalsy();
+  });
+
+  it('shows nothing without a seat count', () => {
+    const tree = render(<SeatsLeftMaybe hasStartTime />, { messages });
+    expect(tree.asFragment().firstChild).toBeFalsy();
   });
 });

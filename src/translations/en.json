@@ -51,6 +51,7 @@
   "BookingFixedDurationForm.priceBreakdownTitle": "Booking breakdown",
   "BookingFixedDurationForm.requestToBook": "Request to book",
   "BookingFixedDurationForm.requiredDate": "Select an available date",
+  "BookingFixedDurationForm.seatsLeft": "{count, plural, one {# seat left} other {# seats left}}",
   "BookingFixedDurationForm.seatsPlaceholder": "Select…",
   "BookingFixedDurationForm.seatsTitle": "Number of seats",
   "BookingTimeForm.bookingEndTitle": "End date",

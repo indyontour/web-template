@@ -454,6 +454,8 @@ describe('OrderPanel', () => {
       expect(getByText('BookingFixedDurationForm.minimumNotice')).toBeInTheDocument();
       // The "too late" error only shows after trying to request a departure that's too close
       expect(queryByText('BookingFixedDurationForm.minimumNoticeError')).not.toBeInTheDocument();
+      // beaway: "N seats left" only appears once a date and start time are picked
+      expect(queryByText('BookingFixedDurationForm.seatsLeft')).not.toBeInTheDocument();
     });
   });
 
