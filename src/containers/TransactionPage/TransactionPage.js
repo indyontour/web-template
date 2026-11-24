@@ -1029,12 +1029,17 @@ export const TransactionPageComponent = props => {
       )
     : null;
 
+  // beaway: booking pages are titled "Booking details" (traveler) / "Booking request" (host);
+  // other processes keep the default title.
+  const schemaTitleId = isBookingProcess(processName)
+    ? transactionRole === CUSTOMER
+      ? 'TransactionPage.schemaTitleBookingCustomer'
+      : 'TransactionPage.schemaTitleBookingProvider'
+    : 'TransactionPage.schemaTitle';
+
   return (
     <Page
-      title={intl.formatMessage(
-        { id: 'TransactionPage.schemaTitle' },
-        { title: listingTitle, h1: pageHeading }
-      )}
+      title={intl.formatMessage({ id: schemaTitleId }, { title: listingTitle, h1: pageHeading })}
       scrollingDisabled={scrollingDisabled}
     >
       <LayoutSingleColumn topbar={<TopbarContainer />} footer={<FooterContainer />}>

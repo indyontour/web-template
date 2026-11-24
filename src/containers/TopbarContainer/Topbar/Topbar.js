@@ -383,6 +383,8 @@ const TopbarComponent = props => {
           showSearchForm={showSearchForm}
           showCreateListingsLink={showCreateListingsLink}
           inboxTab={topbarInboxTab}
+          showMyTripsLink={isCustomer}
+          showBookingRequestsLink={isProvider}
         />
       </div>
       <Modal

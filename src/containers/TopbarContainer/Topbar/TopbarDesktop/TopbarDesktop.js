@@ -57,7 +57,15 @@ const InboxLink = ({ notificationCount, inboxTab }) => {
   );
 };
 
-const ProfileMenu = ({ currentPage, currentUser, onLogout, showManageListingsLink, intl }) => {
+const ProfileMenu = ({
+  currentPage,
+  currentUser,
+  onLogout,
+  showManageListingsLink,
+  showMyTripsLink,
+  showBookingRequestsLink,
+  intl,
+}) => {
   const currentPageClass = page => {
     const isAccountSettingsPage =
       page === 'AccountSettingsPage' && ACCOUNT_SETTINGS_PAGES.includes(currentPage);
@@ -75,6 +83,23 @@ const ProfileMenu = ({ currentPage, currentUser, onLogout, showManageListingsLin
         <Avatar className={css.avatar} user={currentUser} disableProfileLink />
       </MenuLabel>
       <MenuContent className={css.profileMenuContent}>
+        {/* beaway: shortcuts to the inbox tabs (traveler: My trips, host: Booking requests) */}
+        {showMyTripsLink ? (
+          <MenuItem key="InboxPageOrders">
+            <NamedLink className={css.menuLink} name="InboxPage" params={{ tab: 'orders' }}>
+              <span className={css.menuItemBorder} />
+              <FormattedMessage id="TopbarDesktop.myTripsLink" />
+            </NamedLink>
+          </MenuItem>
+        ) : null}
+        {showBookingRequestsLink ? (
+          <MenuItem key="InboxPageSales">
+            <NamedLink className={css.menuLink} name="InboxPage" params={{ tab: 'sales' }}>
+              <span className={css.menuItemBorder} />
+              <FormattedMessage id="TopbarDesktop.bookingRequestsLink" />
+            </NamedLink>
+          </MenuItem>
+        ) : null}
         {showManageListingsLink ? (
           <MenuItem key="ManageListingsPage">
             <NamedLink
@@ -134,6 +159,8 @@ const ProfileMenu = ({ currentPage, currentUser, onLogout, showManageListingsLin
  * @param {boolean} props.showSearchForm
  * @param {boolean} props.showCreateListingsLink
  * @param {string} props.inboxTab
+ * @param {boolean} [props.showMyTripsLink] show "My trips" (inbox orders tab) in the profile menu
+ * @param {boolean} [props.showBookingRequestsLink] show "Booking requests" (inbox sales tab)
  * @returns {JSX.Element} search icon
  */
 const TopbarDesktop = props => {
@@ -153,6 +180,8 @@ const TopbarDesktop = props => {
     showSearchForm,
     showCreateListingsLink,
     inboxTab,
+    showMyTripsLink,
+    showBookingRequestsLink,
   } = props;
   const [mounted, setMounted] = useState(false);
 
@@ -183,6 +212,8 @@ const TopbarDesktop = props => {
       currentUser={currentUser}
       onLogout={onLogout}
       showManageListingsLink={showCreateListingsLink}
+      showMyTripsLink={showMyTripsLink}
+      showBookingRequestsLink={showBookingRequestsLink}
       intl={intl}
     />
   ) : null;

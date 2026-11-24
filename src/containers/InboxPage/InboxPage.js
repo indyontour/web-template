@@ -340,7 +340,8 @@ export const InboxPageComponent = props => {
         {
           text: (
             <span>
-              <FormattedMessage id="InboxPage.ordersTabTitle" />
+              {/* beaway: own text key, so the Console text for the old tab name doesn't override it */}
+              <FormattedMessage id="InboxPage.myTripsTabTitle" />
               {customerNotificationCount > 0 ? (
                 <NotificationBadge count={customerNotificationCount} />
               ) : null}
@@ -360,7 +361,7 @@ export const InboxPageComponent = props => {
         {
           text: (
             <span>
-              <FormattedMessage id="InboxPage.salesTabTitle" />
+              <FormattedMessage id="InboxPage.bookingRequestsTabTitle" />
               {providerNotificationCount > 0 ? (
                 <NotificationBadge count={providerNotificationCount} />
               ) : null}
