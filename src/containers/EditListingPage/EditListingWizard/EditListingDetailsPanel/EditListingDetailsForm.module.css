@@ -75,3 +75,106 @@
     margin-top: 100px;
   }
 }
+
+/* beaway: suggestions and hints shown right under a listing field. The field above keeps its
+   own bottom margin, so pull this block up to sit just under it. */
+.fieldExtras {
+  margin-top: -12px;
+  margin-bottom: 24px;
+
+  @media (--viewportMedium) {
+    margin-top: -16px;
+    margin-bottom: 32px;
+  }
+}
+
+.suggestionsLabel {
+  composes: textSmall from global;
+  color: var(--colorGrey600);
+  margin-top: 0;
+  margin-bottom: 6px;
+
+  @media (--viewportMedium) {
+    margin-bottom: 8px;
+  }
+}
+
+.suggestionList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  @media (--viewportMedium) {
+    gap: 8px;
+  }
+}
+
+.suggestionChip {
+  composes: textSmall from global;
+  min-height: 30px;
+  margin: 0;
+  padding: 0 12px;
+  border: 1px solid var(--colorGrey300);
+  border-radius: 999px;
+  background-color: var(--colorWhite);
+  color: var(--colorGrey700);
+  cursor: pointer;
+  transition: all var(--transitionStyleButton);
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--marketplaceColor);
+    color: var(--marketplaceColor);
+  }
+
+  @media (--viewportMedium) {
+    min-height: 32px;
+    padding: 0 16px;
+  }
+}
+
+.suggestionChipSelected {
+  border-color: var(--marketplaceColor);
+  background-color: var(--marketplaceColor);
+  color: var(--colorWhite);
+
+  &:hover,
+  &:focus-visible {
+    color: var(--colorWhite);
+  }
+}
+
+/* beaway: read-only fees summary under the Destination field */
+.feesInfo {
+  composes: textSmall from global;
+  margin-top: 6px;
+  padding: 6px 12px;
+  border-left: 3px solid var(--marketplaceColor);
+  background-color: var(--colorGrey50);
+  color: var(--colorGrey700);
+
+  @media (--viewportMedium) {
+    margin-top: 8px;
+    padding: 8px 16px;
+  }
+}
+
+.feesInfoTitle {
+  composes: textSmall from global;
+  margin: 0 0 6px 0;
+  padding: 0;
+
+  @media (--viewportMedium) {
+    margin-bottom: 8px;
+  }
+}
+
+.feesInfoList {
+  composes: textSmall from global;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}

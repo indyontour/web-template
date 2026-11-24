@@ -835,3 +835,201 @@
   width: 100%;
   height: 100%;
 }
+
+/* beaway: plan for the day, a card with a numbered timeline (SectionItineraryMaybe) */
+.sectionItinerary {
+  padding: 0 24px;
+  margin-bottom: 36px;
+
+  @media (--viewportMedium) {
+    padding: 0;
+    margin-bottom: 40px;
+  }
+}
+
+.itineraryCard {
+  overflow: hidden;
+  border: 1px solid var(--colorGrey100);
+  border-radius: 12px;
+  background-color: var(--colorWhite);
+}
+
+.itineraryDestination {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--colorGrey100);
+  font-weight: var(--fontWeightSemiBold);
+  line-height: 24px;
+
+  @media (--viewportMedium) {
+    gap: 8px;
+    padding: 16px 24px;
+  }
+}
+
+.itineraryDestinationIcon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: var(--marketplaceColor);
+  stroke-width: 2px;
+}
+
+.itineraryList {
+  margin: 0;
+  padding: 18px;
+  list-style: none;
+
+  @media (--viewportMedium) {
+    padding: 24px;
+  }
+}
+
+.itineraryStep {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding-bottom: 18px;
+
+  /* Line from this step's number down to the next one */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 13px;
+    width: 2px;
+    background-color: var(--colorGrey100);
+  }
+
+  &:last-child {
+    padding-bottom: 0;
+
+    &::before {
+      display: none;
+    }
+  }
+
+  @media (--viewportMedium) {
+    gap: 16px;
+    padding-bottom: 24px;
+  }
+}
+
+.itineraryStepNumber {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--marketplaceColor);
+  border-radius: 50%;
+  background-color: var(--colorWhite);
+  color: var(--marketplaceColor);
+  font-size: 14px;
+  font-weight: var(--fontWeightBold);
+  line-height: 1;
+}
+
+/* First and last steps (leaving and getting back) are filled */
+.itineraryStep:first-child .itineraryStepNumber,
+.itineraryStep:last-child .itineraryStepNumber {
+  background-color: var(--marketplaceColor);
+  color: var(--colorWhite);
+}
+
+.itineraryStepText {
+  padding-top: 2px;
+  font-weight: var(--fontWeightRegular);
+  line-height: 24px;
+}
+
+.itineraryNote {
+  composes: textSmall from global;
+  margin: 0;
+  padding: 12px 18px;
+  background-color: var(--colorGrey50);
+  border-top: 1px solid var(--colorGrey100);
+  color: var(--colorGrey600);
+
+  @media (--viewportMedium) {
+    padding: 12px 24px;
+  }
+}
+
+/* beaway: fees paid on the day at the destination (SectionDestinationFeesMaybe) */
+.sectionDestinationFees {
+  padding: 0 24px;
+  margin-bottom: 36px;
+
+  @media (--viewportMedium) {
+    padding: 0;
+    margin-bottom: 40px;
+  }
+}
+
+.feeList {
+  margin: 0;
+  padding: 0 18px;
+
+  @media (--viewportMedium) {
+    padding: 0 24px;
+  }
+}
+
+.feeRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px 12px;
+  padding: 12px 0;
+
+  &:not(:last-child) {
+    border-bottom: 1px solid var(--colorGrey100);
+  }
+
+  @media (--viewportMedium) {
+    gap: 8px 16px;
+    padding: 16px 0;
+  }
+}
+
+.feeLabel {
+  font-weight: var(--fontWeightSemiBold);
+  line-height: 24px;
+}
+
+.feeAmounts {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+
+  @media (--viewportMedium) {
+    gap: 8px;
+  }
+}
+
+.feeAmount {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 200px;
+  line-height: 24px;
+}
+
+.feeVisitor {
+  color: var(--colorGrey700);
+}
+
+.feePrice {
+  font-weight: var(--fontWeightSemiBold);
+}

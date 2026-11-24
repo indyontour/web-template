@@ -14,6 +14,12 @@ import {
   isValidCurrencyForTransactionProcess,
 } from '../../../../util/fieldHelpers';
 import { maxLength, required, composeValidators } from '../../../../util/validators';
+import {
+  formatFeeValue,
+  getDestinationFees,
+  getMeetingPointsFor,
+  getDestinationSuggestions,
+} from '../../../../util/destinations';
 
 // Import shared components
 import {
@@ -22,12 +28,20 @@ import {
   FieldSelect,
   FieldTextInput,
   Heading,
+  HelpText,
   CustomExtendedDataField,
 } from '../../../../components';
 // Import modules from this directory
 import css from './EditListingDetailsForm.module.css';
 
 const TITLE_MAX_LENGTH = 60;
+
+// beaway: listing field keys (Console) used by the destination suggestions
+const DESTINATION_FIELD = 'pub_destination';
+const DEPARTURE_POINT_FIELD = 'pub_departurepoint';
+const DESTINATION_KEY = 'destination';
+const DEPARTURE_POINT_KEY = 'departurepoint';
+const TRIP_DURATION_KEY = 'tripduration';
 
 // Show various error messages
 const ErrorMessage = props => {
@@ -245,7 +259,14 @@ const FieldSelectCategory = props => {
 
 // Add collect data for listing fields (both publicData and privateData) based on configuration
 const AddListingFields = props => {
-  const { listingType, listingFieldsConfig, selectedCategories, formId, intl } = props;
+  const {
+    listingType,
+    listingFieldsConfig,
+    selectedCategories,
+    formId,
+    intl,
+    renderFieldExtras,
+  } = props;
   const targetCategoryIds = Object.values(selectedCategories);
 
   const fields = listingFieldsConfig.reduce((pickedFields, fieldConfig) => {
@@ -256,6 +277,9 @@ const AddListingFields = props => {
     const isProviderScope = ['public', 'private'].includes(scope);
     const isTargetListingType = isFieldForListingType(listingType, fieldConfig);
     const isTargetCategory = isFieldForCategory(targetCategoryIds, fieldConfig);
+
+    // beaway: optional content rendered right after a field (e.g. suggestions or hints)
+    const extras = renderFieldExtras ? renderFieldExtras(key) : null;
 
     return isKnownSchemaType && isProviderScope && isTargetListingType && isTargetCategory
       ? [
@@ -269,11 +293,115 @@ const AddListingFields = props => {
             })}
             formId={formId}
           />,
+          ...(extras
+            ? [<React.Fragment key={`${namespacedKey}-extras`}>{extras}</React.Fragment>]
+            : []),
         ]
       : pickedFields;
   }, []);
 
   return <>{fields}</>;
+};
+
+/**
+ * beaway: popular meeting points from all destinations, shown under the Departure point field
+ * (the selected destination's own points first). Tapping one fills the field; the field itself
+ * stays free text.
+ *
+ * @component
+ * @param {Object} props
+ * @param {Array<string>} props.meetingPoints - Suggested meeting points
+ * @param {string} [props.currentValue] - Current value of the Departure point field
+ * @param {Function} props.onSelect - Called with the tapped meeting point
+ * @param {string} props.formId - The form id, used for unique element ids
+ * @returns {JSX.Element|null}
+ */
+const MeetingPointSuggestions = props => {
+  const { meetingPoints, currentValue, onSelect, formId } = props;
+  if (!meetingPoints?.length) {
+    return null;
+  }
+  const labelId = `${formId}.meetingPointsLabel`;
+  return (
+    <div className={css.fieldExtras} role="group" aria-labelledby={labelId}>
+      <p id={labelId} className={css.suggestionsLabel}>
+        <FormattedMessage id="EditListingDetailsForm.meetingPointsLabel" />
+      </p>
+      <ul className={css.suggestionList}>
+        {meetingPoints.map(point => {
+          const isSelected = currentValue?.trim() === point;
+          return (
+            <li key={point}>
+              <button
+                type="button"
+                className={classNames(css.suggestionChip, {
+                  [css.suggestionChipSelected]: isSelected,
+                })}
+                aria-pressed={isSelected}
+                onClick={() => onSelect(point)}
+              >
+                {point}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+};
+
+/**
+ * beaway: read-only summary of the fees travelers pay per person on the day at the selected
+ * destination, so the host knows what travelers will see and leaves them out of the seat price.
+ *
+ * @component
+ * @param {Object} props
+ * @param {Object} [props.fees] - Result of getDestinationFees, or null
+ * @param {Object} props.intl - react-intl object
+ * @returns {JSX.Element|null}
+ */
+const DestinationFeesInfo = props => {
+  const { fees, intl } = props;
+  if (!fees) {
+    return null;
+  }
+  const formatAmounts = ({ thai, foreign }) =>
+    [
+      thai
+        ? intl.formatMessage(
+            { id: 'DestinationFees.thaiVisitorsAmount' },
+            { amount: formatFeeValue(intl, thai) }
+          )
+        : null,
+      foreign
+        ? intl.formatMessage(
+            { id: 'DestinationFees.foreignVisitorsAmount' },
+            { amount: formatFeeValue(intl, foreign) }
+          )
+        : null,
+    ]
+      .filter(Boolean)
+      .join(' · ');
+  const rows = [
+    { type: 'entrance', labelId: 'DestinationFees.entranceLabel' },
+    { type: 'guide', labelId: 'DestinationFees.guideLabel' },
+  ].filter(row => fees[row.type]);
+
+  return (
+    <div className={css.feesInfo}>
+      <p className={css.feesInfoTitle}>
+        <FormattedMessage id="EditListingDetailsForm.destinationFeesInfo" />
+      </p>
+      <ul className={css.feesInfoList}>
+        {rows.map(row => (
+          <li key={row.type}>
+            <strong>{intl.formatMessage({ id: row.labelId })}:</strong>{' '}
+            {formatAmounts(fees[row.type])}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 };
 
 // Return configuration for given listingType
@@ -383,6 +511,45 @@ const EditListingDetailsForm = props => (
 
       const showListingFields = hasCategories ? allCategoriesChosen : listingType;
 
+      // beaway: suggestions for the selected destination (null if none or not configured)
+      const destination = values[DESTINATION_FIELD];
+      const destinationSuggestions = getDestinationSuggestions(destination, intl.locale);
+
+      // beaway: fees paid on the day at the destination, from Marketplace texts in Console
+      const destinationFees = getDestinationFees(intl.messages, destination);
+
+      const renderFieldExtras = key => {
+        if (key === DESTINATION_KEY) {
+          const hasPlan = destinationSuggestions?.steps?.length > 0;
+          return hasPlan || destinationFees ? (
+            <div className={css.fieldExtras}>
+              {hasPlan ? (
+                <p className={css.suggestionsLabel}>
+                  <FormattedMessage id="EditListingDetailsForm.destinationPlanShown" />
+                </p>
+              ) : null}
+              <DestinationFeesInfo fees={destinationFees} intl={intl} />
+            </div>
+          ) : null;
+        }
+        if (key === DEPARTURE_POINT_KEY) {
+          return (
+            <MeetingPointSuggestions
+              meetingPoints={getMeetingPointsFor(destination)}
+              currentValue={values[DEPARTURE_POINT_FIELD]}
+              onSelect={point => formApi.change(DEPARTURE_POINT_FIELD, point)}
+              formId={formId}
+            />
+          );
+        }
+        if (key === TRIP_DURATION_KEY && destinationSuggestions?.durationHint) {
+          return (
+            <HelpText className={css.fieldExtras} helpText={destinationSuggestions.durationHint} />
+          );
+        }
+        return null;
+      };
+
       const classes = classNames(css.root, className);
       const submitReady = (updated && pristine) || ready;
       const submitInProgress = updateInProgress;
@@ -461,6 +628,7 @@ const EditListingDetailsForm = props => (
               selectedCategories={pickSelectedCategories(values)}
               formId={formId}
               intl={intl}
+              renderFieldExtras={renderFieldExtras}
             />
           )}
 

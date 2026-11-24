@@ -52,6 +52,8 @@ import Notifications from './Notifications/Notifications';
 import SectionReviews from './SectionReviews';
 import SectionAuthorMaybe from './SectionAuthorMaybe';
 import SectionMapMaybe from './SectionMapMaybe';
+import SectionItineraryMaybe from './SectionItineraryMaybe';
+import SectionDestinationFeesMaybe from './SectionDestinationFeesMaybe';
 import SectionGallery from './SectionGallery';
 import CustomListingFields from './CustomListingFields';
 import ListingPageAccessWrapper from './ListingPageAccessWrapper';
@@ -282,6 +284,12 @@ export const ListingPageComponent = props => {
               categoryConfiguration={config.categoryConfiguration}
               intl={intl}
             />
+
+            <SectionItineraryMaybe
+              publicData={publicData}
+              listingFieldConfigs={listingConfig.listingFields}
+            />
+            <SectionDestinationFeesMaybe publicData={publicData} />
 
             <SectionMapMaybe
               geolocation={geolocation}
