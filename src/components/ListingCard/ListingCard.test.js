@@ -69,7 +69,7 @@ describe('ListingCard', () => {
       'listing1',
       {
         price: new Money(100000, 'EUR'),
-        publicData: { listingType: 'test-trip-booking', priceperseat: 1000 },
+        publicData: { listingType: 'licensed-operator-trip', priceperseat: 1000 },
       },
       { author: createUser('user1') }
     );

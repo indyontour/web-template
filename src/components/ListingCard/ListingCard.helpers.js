@@ -42,13 +42,7 @@ const parseSeatPrice = value => {
 // beaway: label shown at the top of each trip card, by listing type.
 const TRIP_BADGES = {
   'local-host-trip': { id: 'ListingCard.badge.localHost', variant: 'localHost' },
-  // localhost-only test types (src/config/configBeawayTestListingTypes.js)
-  'test-local-host-booking': { id: 'ListingCard.badge.localHost', variant: 'localHost' },
   'licensed-operator-trip': {
-    id: 'ListingCard.badge.licensedOperator',
-    variant: 'licensedOperator',
-  },
-  'test-trip-booking': {
     id: 'ListingCard.badge.licensedOperator',
     variant: 'licensedOperator',
   },

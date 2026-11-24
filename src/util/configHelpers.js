@@ -1,4 +1,3 @@
-import { getBeawayTestListingTypes } from '../config/configBeawayTestListingTypes';
 import { subUnitDivisors } from '../config/settingsCurrency';
 import { getSupportedProcessesInfo, isBookingProcessAlias } from '../transactions/transaction';
 import { sanitizeText } from './sanitize';
@@ -1420,11 +1419,9 @@ const mergeListingConfig = (hostedConfig, defaultConfigs, categoriesInUse) => {
   // When debugging, include default configs by passing 'true' here.
   // Otherwise, use listing types and fields from hosted assets.
   const shouldMerge = mergeDefaultTypesAndFieldsForDebugging(false);
-  const listingTypesBase = shouldMerge
+  const listingTypes = shouldMerge
     ? union(hostedListingTypes, defaultListingTypes, 'listingType')
     : hostedListingTypes;
-  // beaway: localhost-only test listing types (empty in production builds)
-  const listingTypes = union(listingTypesBase, getBeawayTestListingTypes(), 'listingType');
   const listingFields = shouldMerge
     ? union(hostedListingFields, defaultListingFields, 'key')
     : hostedListingFields;
