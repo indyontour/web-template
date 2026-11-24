@@ -46,6 +46,8 @@
   "BookingDatesForm.seatsTitle": "Number of seats",
   "BookingDatesForm.timeSlotsError": "We encountered an error when loading the available dates. Please refresh the page.",
   "BookingFixedDurationForm.bookingStartTitle": "Pick a date",
+  "BookingFixedDurationForm.minimumNotice": "Trips must be requested at least {hours} hours before departure. Departures that are sooner aren't shown.",
+  "BookingFixedDurationForm.minimumNoticeError": "This trip now departs in less than {hours} hours, so it can no longer be requested. Please pick a later date.",
   "BookingFixedDurationForm.priceBreakdownTitle": "Booking breakdown",
   "BookingFixedDurationForm.requestToBook": "Request to book",
   "BookingFixedDurationForm.requiredDate": "Select an available date",

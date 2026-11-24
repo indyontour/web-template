@@ -91,6 +91,69 @@ export const removeUnnecessaryBoundaries = (timeSlots, seatsEnabled) => {
 };
 
 /**
+ * beaway: travelers must request a trip at least this many hours before departure.
+ * This is the only place to change it: the booking form and its texts use this value.
+ *
+ * The default-booking process (ext/transaction-processes) expires a pending request 24 hours
+ * after it was sent or 12 hours before departure, whichever comes first. With 24 hours' notice
+ * a request always reaches the host at least 24 hours before departure, so the host has at
+ * least 12 hours to answer before it expires.
+ */
+export const MIN_NOTICE_HOURS = 24;
+
+/**
+ * beaway: the earliest booking start a traveler can request right now.
+ *
+ * @param {number} [noticeInHours] defaults to MIN_NOTICE_HOURS
+ * @param {Date} [now] defaults to the current time
+ * @returns {Date}
+ */
+export const getEarliestBookingStart = (noticeInHours = MIN_NOTICE_HOURS, now = new Date()) =>
+  new Date(now.getTime() + noticeInHours * 60 * 60 * 1000);
+
+/**
+ * beaway: drop the part of each time slot that starts before earliestStart. Time slots that end
+ * before it are removed, and a time slot that is cut keeps its seats and end time.
+ * A cut time slot is shorter, so a trip that no longer fits is no longer offered.
+ *
+ * @param {Array<TimeSlot>} timeSlots
+ * @param {Date} [earliestStart] nothing is cut when this is missing
+ * @returns {Array<TimeSlot>}
+ */
+export const clipTimeSlotsToEarliestStart = (timeSlots, earliestStart) => {
+  if (!earliestStart || !Array.isArray(timeSlots)) {
+    return timeSlots;
+  }
+  return timeSlots
+    .filter(ts => ts.attributes.end.getTime() > earliestStart.getTime())
+    .map(ts =>
+      ts.attributes.start.getTime() < earliestStart.getTime()
+        ? { ...ts, attributes: { ...ts.attributes, start: earliestStart } }
+        : ts
+    );
+};
+
+/**
+ * beaway: apply clipTimeSlotsToEarliestStart to time slot data that is keyed by month or date,
+ * e.g. { '2024-07': { timeSlots: [] } }. Other values in each entry are kept.
+ *
+ * @param {Object} timeSlotsByKey
+ * @param {Date} [earliestStart]
+ * @returns {Object}
+ */
+export const clipKeyedTimeSlotsToEarliestStart = (timeSlotsByKey, earliestStart) => {
+  if (!earliestStart || !timeSlotsByKey) {
+    return timeSlotsByKey;
+  }
+  return Object.entries(timeSlotsByKey).reduce((picked, [key, data]) => {
+    const clipped = Array.isArray(data?.timeSlots)
+      ? { ...data, timeSlots: clipTimeSlotsToEarliestStart(data.timeSlots, earliestStart) }
+      : data;
+    return { ...picked, [key]: clipped };
+  }, {});
+};
+
+/**
  * Join monthly time slots into a single array and remove unnecessary boundaries on month changes.
  *
  * @param {Object} monthlyTimeSlots { '2024-07': { timeSlots: [] }, }

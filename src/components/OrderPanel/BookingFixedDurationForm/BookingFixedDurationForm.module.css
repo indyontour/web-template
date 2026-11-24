@@ -87,3 +87,24 @@
     margin: 24px 0;
   }
 }
+
+/* beaway: minimum notice for trip requests */
+.minimumNotice {
+  composes: textSmall from global;
+  color: var(--colorGrey700);
+  margin: 12px 24px 0 24px;
+
+  @media (--viewportMedium) {
+    margin: 16px 0 0 0;
+  }
+}
+
+.minimumNoticeError {
+  composes: textSmall from global;
+  color: var(--colorFail);
+  margin: 12px 24px 0 24px;
+
+  @media (--viewportMedium) {
+    margin: 16px 0 0 0;
+  }
+}

@@ -450,6 +450,10 @@ describe('OrderPanel', () => {
       expect(getByText('BookingFixedDurationForm.requestToBook')).toBeInTheDocument();
       expect(getByText('OrderPanel.noOnlinePaymentInfo')).toBeInTheDocument();
       expect(getByText('OrderPanel.ctaButtonMessageBooking')).toBeInTheDocument();
+      // beaway: trips must be requested MIN_NOTICE_HOURS (24) hours before departure
+      expect(getByText('BookingFixedDurationForm.minimumNotice')).toBeInTheDocument();
+      // The "too late" error only shows after trying to request a departure that's too close
+      expect(queryByText('BookingFixedDurationForm.minimumNoticeError')).not.toBeInTheDocument();
     });
   });
 

@@ -35,6 +35,8 @@ import {
   getTimeSlotsOnSelectedDate,
   showNextMonthStepper,
   showPreviousMonthStepper,
+  clipTimeSlotsToEarliestStart,
+  clipKeyedTimeSlotsToEarliestStart,
 } from '../booking.shared';
 
 import css from './FieldDateAndTimeInput.module.css';
@@ -396,6 +398,7 @@ const onBookingStartDateChange = (props, setCurrentMonth) => value => {
     startTimeInterval,
     priceVariants,
     values,
+    earliestBookingStart,
   } = props;
   if (!value || !value.date) {
     formApi.batch(() => {
@@ -454,7 +457,8 @@ const onBookingStartDateChange = (props, setCurrentMonth) => value => {
     useFetchTimeSlotsForDate: true,
   }).then(timeSlots => {
     const { startTime, endTime } = updateBookingFieldsOnStartDateChange({
-      timeSlotsOnDate: timeSlots,
+      // beaway: leave out start times inside the minimum notice period
+      timeSlotsOnDate: clipTimeSlotsToEarliestStart(timeSlots || [], earliestBookingStart),
       ...commonParamsForUpdateBookingFields,
     });
 
@@ -543,6 +547,7 @@ const FieldHidden = props => {
  * @param {string} [props.timeZone] - The time zone of the listing
  * @param {number} [props.dayCountAvailableForBooking] - The number of days available for booking
  * @param {Object} [props.intl] - The intl object from react-intl
+ * @param {Date} [props.earliestBookingStart] - Start times before this aren't offered (minimum notice)
  * @returns {JSX.Element} FieldDateAndTimeInput component
  */
 const FieldDateAndTimeInput = props => {
@@ -556,8 +561,8 @@ const FieldDateAndTimeInput = props => {
     listingId,
     startTimeInterval,
     onFetchTimeSlots,
-    monthlyTimeSlots,
-    timeSlotsForDate,
+    monthlyTimeSlots: monthlyTimeSlotsRaw,
+    timeSlotsForDate: timeSlotsForDateRaw,
     minDurationStartingInInterval,
     onMonthChanged,
     timeZone,
@@ -566,7 +571,20 @@ const FieldDateAndTimeInput = props => {
     priceVariants,
     intl,
     dayCountAvailableForBooking,
+    earliestBookingStart,
   } = props;
+
+  // beaway: time slots (or parts of them) that start too soon aren't offered, so dates with no
+  // departure after earliestBookingStart are blocked and only later start times are listed.
+  const monthlyTimeSlots = clipKeyedTimeSlotsToEarliestStart(
+    monthlyTimeSlotsRaw,
+    earliestBookingStart
+  );
+  const timeSlotsForDate = clipKeyedTimeSlotsToEarliestStart(
+    timeSlotsForDateRaw,
+    earliestBookingStart
+  );
+  const propsWithClippedTimeSlots = { ...props, monthlyTimeSlots, timeSlotsForDate };
 
   const classes = classNames(rootClassName || css.root, className);
   const priceVariantName = values.priceVariantName;
@@ -774,7 +792,7 @@ const FieldDateAndTimeInput = props => {
               onMonthClick(localizedDate < currentMonth ? prevMonthFn : nextMonthFn);
               setCurrentMonth(localizedDate);
             }}
-            onChange={onBookingStartDateChange(props, setCurrentMonth)}
+            onChange={onBookingStartDateChange(propsWithClippedTimeSlots, setCurrentMonth)}
             onClose={() => {
               setCurrentMonth(bookingStartDate || startOfToday);
             }}

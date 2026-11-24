@@ -11,6 +11,7 @@ import { Form, H6, PrimaryButton, FieldSelect } from '../../../components';
 
 import EstimatedCustomerBreakdownMaybe from '../EstimatedCustomerBreakdownMaybe';
 import FieldDateAndTimeInput from './FieldDateAndTimeInput';
+import { MIN_NOTICE_HOURS, getEarliestBookingStart } from '../booking.shared';
 
 import FetchLineItemsError from '../FetchLineItemsError/FetchLineItemsError.js';
 
@@ -111,6 +112,8 @@ export const BookingFixedDurationForm = props => {
   } = props;
 
   const [seatsOptions, setSeatsOptions] = useState([1]);
+  // beaway: shown when the picked departure got too close while the page was open
+  const [isTooLateToRequest, setIsTooLateToRequest] = useState(false);
   const initialValuesMaybe =
     priceVariants.length > 1 && preselectedPriceVariant
       ? { initialValues: { priceVariantName: preselectedPriceVariant?.name } }
@@ -173,8 +176,26 @@ export const BookingFixedDurationForm = props => {
         const onHandleFetchLineItems = handleFetchLineItems(props);
         const submitDisabled = isPriceVariationsInUse && !isPublishedListing;
 
+        // beaway: trips can only be requested MIN_NOTICE_HOURS before departure.
+        // Recalculated on every render, so it moves forward while the page stays open.
+        const earliestBookingStart = getEarliestBookingStart();
+        const handleSubmitWithNotice = e => {
+          const isTooLate =
+            !!startDate && startDate.getTime() < getEarliestBookingStart().getTime();
+          setIsTooLateToRequest(isTooLate);
+          if (isTooLate) {
+            e?.preventDefault?.();
+            return;
+          }
+          return handleSubmit(e);
+        };
+
         return (
-          <Form onSubmit={handleSubmit} className={classes} enforcePagePreloadFor="CheckoutPage">
+          <Form
+            onSubmit={handleSubmitWithNotice}
+            className={classes}
+            enforcePagePreloadFor="CheckoutPage"
+          >
             <PriceVariantFieldComponent
               priceVariants={priceVariants}
               priceVariantName={priceVariantName}
@@ -206,8 +227,15 @@ export const BookingFixedDurationForm = props => {
                 timeZone={timeZone}
                 dayCountAvailableForBooking={dayCountAvailableForBooking}
                 handleFetchLineItems={onHandleFetchLineItems}
+                earliestBookingStart={earliestBookingStart}
               />
             ) : null}
+            <p className={css.minimumNotice}>
+              <FormattedMessage
+                id="BookingFixedDurationForm.minimumNotice"
+                values={{ hours: MIN_NOTICE_HOURS }}
+              />
+            </p>
             {seatsEnabled ? (
               <FieldSelect
                 name="seats"
@@ -256,6 +284,17 @@ export const BookingFixedDurationForm = props => {
             ) : null}
 
             <FetchLineItemsError error={fetchLineItemsError} />
+
+            {isTooLateToRequest &&
+            startDate &&
+            startDate.getTime() < earliestBookingStart.getTime() ? (
+              <p className={css.minimumNoticeError} role="alert">
+                <FormattedMessage
+                  id="BookingFixedDurationForm.minimumNoticeError"
+                  values={{ hours: MIN_NOTICE_HOURS }}
+                />
+              </p>
+            ) : null}
 
             <div className={css.submitButton}>
               <PrimaryButton
